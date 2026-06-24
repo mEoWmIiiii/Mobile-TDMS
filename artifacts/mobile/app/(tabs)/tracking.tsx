@@ -16,10 +16,10 @@ import { TRUCKS } from "@/data/mockData";
 import { useColors } from "@/hooks/useColors";
 
 const TRUCK_POSITIONS = [
-  { id: "TRK-001", x: 62, y: 55, status: "moving" as const, route: "Cebu \u2192 Manila" },
+  { id: "TRK-001", x: 62, y: 55, status: "moving" as const, route: "Cebu → Manila" },
   { id: "TRK-002", x: 30, y: 70, status: "alert" as const, route: "Iloilo Port" },
   { id: "TRK-003", x: 65, y: 72, status: "docked" as const, route: "Cebu Terminal" },
-  { id: "TRK-004", x: 60, y: 40, status: "moving" as const, route: "CAVITEX \u2192 Cavite" },
+  { id: "TRK-004", x: 60, y: 40, status: "moving" as const, route: "CAVITEX → Cavite" },
 ];
 
 const STATUS_COLOR = {
@@ -74,7 +74,7 @@ export default function TrackingScreen() {
         {/* Static SVG Map Panel */}
         <View style={[styles.mapCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
           <View style={styles.mapHeader}>
-            <Text style={[styles.mapTitle, { color: colors.foreground }]}>Fleet Map \u2014 Philippines</Text>
+            <Text style={[styles.mapTitle, { color: colors.foreground }]}>Fleet Map — Philippines</Text>
             <Text style={[styles.mapSub, { color: colors.mutedForeground }]}>Real-time asset positions</Text>
           </View>
           <View style={styles.mapContainer}>
@@ -219,7 +219,7 @@ export default function TrackingScreen() {
               >
                 <View style={[styles.truckStatusDot, { backgroundColor: color }]} />
                 <View style={{ flex: 1 }}>
-                  <Text style={[styles.truckRowId, { color: colors.foreground }]}>{truck.id} \u00b7 {truck.type}</Text>
+                  <Text style={[styles.truckRowId, { color: colors.foreground }]}>{truck.id} · {truck.type}</Text>
                   <Text style={[styles.truckRowLoc, { color: colors.mutedForeground }]}>{pos.route}</Text>
                 </View>
                 <View style={styles.truckRowRight}>

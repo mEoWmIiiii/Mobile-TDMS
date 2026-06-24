@@ -415,16 +415,18 @@ export default function JobsScreen() {
               </View>
             </FormRow>
 
-            {/* Air Cargo sub-panel — only HAWB, Cut-off, Markings */}
+            {/* HAWB Number — visible for BOTH Land & Air */}
+            <FormRow label="HAWB NUMBER">
+              <TextInput style={[styles.formInput, { backgroundColor: colors.card, borderColor: colors.border, color: colors.foreground }]} placeholder="e.g. HAWB-0789" placeholderTextColor={colors.mutedForeground} value={form.hawb} onChangeText={(v) => setForm({ ...form, hawb: v })} />
+            </FormRow>
+
+            {/* Air Cargo sub-panel — only Cut-off & Markings */}
             <Animated.View style={{ maxHeight: airHeight, overflow: "hidden" }}>
               <View style={[styles.airBlock, { backgroundColor: colors.secondary, borderColor: colors.border }]}>
                 <View style={styles.airBlockHeader}>
                   <Icon name="send" size={13} color={colors.primary} />
                   <Text style={[styles.airBlockTitle, { color: colors.primary }]}>Air Manifest Details</Text>
                 </View>
-                <FormRow label="HAWB NUMBER">
-                  <TextInput style={[styles.formInput, { backgroundColor: colors.card, borderColor: colors.border, color: colors.foreground }]} placeholder="e.g. HAWB-0789" placeholderTextColor={colors.mutedForeground} value={form.hawb} onChangeText={(v) => setForm({ ...form, hawb: v })} />
-                </FormRow>
                 <FormRow label="CUT-OFF TIME">
                   <View style={[styles.cutoffInputRow, { backgroundColor: colors.card, borderColor: colors.border }]}>
                     <Text style={[styles.cutoffInputValue, { color: "#B91C1C" }]}>{form.cutoff}</Text>
