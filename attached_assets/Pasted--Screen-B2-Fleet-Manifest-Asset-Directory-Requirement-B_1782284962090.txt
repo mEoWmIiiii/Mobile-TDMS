@@ -1,0 +1,36 @@
+#### Screen B2: Fleet Manifest & Asset Directory
+* **Requirement B2.1:** Implement a infinite-scrolling vertical list view optimizing system rendering memory for company-owned logistics assets.
+* **Requirement B2.2:** Each list component must cleanly present the `Truck ID`, specific `Truck Type` (e.g., 10-Wheeler Wing Van, 4-Wheeler Closed Van, Refrigerator Truck), and a linked intermodal `Plane No` indicator showing the target flight connection.
+
+---
+
+### Module C: Executive Analytics Dashboard (Mobile-Optimized)
+
+#### Screen C1: High-Level Logistics KPIs
+* **Requirement C1.1:** The view must aggregate real-time metrics data into clean, glanceable UI charts illustrating daily delivery completion rates, active vehicle fleet distribution, and pending bookings.
+
+#### Screen C2: Deep-Dive Chart Expansion
+* **Requirement C2.1:** Tapping a chart element or clicking a "View All" button must invoke a full-screen hero animation. The active element transforms smoothly into an expanded analysis view featuring interactive data points, historical metric filtering tools, and advanced debug logs.
+
+---
+
+## Technical Architecture & Real-Time Telematics
+
+### Telematics Features
+* **Live Map Canvas Engine:** Embed a real-time vector map tracking ongoing asset location coordinates through hardware background GPS streams.
+* **GPS Telematics Verification Banner:** A sticky, green, persistent validation bar anchored at the top layout stating: `[✔] GPS Provider Integrated & Active`.
+* **State Automation Engine:** The application must automatically change vehicle indicators and map markers without driver intervention:
+
+| System Trigger Condition | UI State Asset Icon | Trip Progress Bar State |
+| --- | --- | --- |
+| Speed > 5 km/h outside geofence | Active Moving Truck | Incremental % progression |
+| Device inside Terminal geofence | Docked Warehouse Icon | Filled Anchor Milestone |
+| Speed = 0 km/h outside geofence for >15 mins | Pulsing Amber/Red Alert Ring | Paused/Warning Flag State |
+
+---
+
+## Design System & Interactivity Constraints
+* **Touch Targets:** Every button, checkbox, and dropdown selector must feature a minimum clickable target surface area of 48px x 48px to guarantee driver ergonomics on bumpy roads.
+* **Typography Specs:** Utilize high-contrast sans-serif typefaces (e.g., Inter, SF Pro). Apply bold or semi-bold weights exclusively onto key operational references (`Job No`, `MAWB`, `Plate No`, `1300H`) to optimize legibility under direct sunlight.
+* **Color Semantics:** Use a neutral background color paired with strict functional semantic indicators: Green for validated active integrations / On-schedule status, and Amber / Red for route delays or missing documentation parameters.
+* **Animation Bounds:** All transitions—including accordion components, dashboard chart expansions, and header mutations—must use explicit ease-in-out physics frameworks running at 60 fps to ensure high perceived system responsiveness.
