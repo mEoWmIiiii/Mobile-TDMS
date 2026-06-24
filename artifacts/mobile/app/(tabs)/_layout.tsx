@@ -8,21 +8,22 @@ import { Platform, StyleSheet, View, useColorScheme } from "react-native";
 
 import { Icon as SVGIcon } from "@/components/Icon";
 import { useColors } from "@/hooks/useColors";
+import { useTheme } from "@/contexts/ThemeContext";
 
 function NativeTabLayout() {
   return (
     <NativeTabs>
       <NativeTabs.Trigger name="index">
         <Icon sf={{ default: "house", selected: "house.fill" }} />
-        <Label>Dashboard</Label>
+        <Label>Home</Label>
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="jobs">
         <Icon sf={{ default: "briefcase", selected: "briefcase.fill" }} />
-        <Label>Jobs</Label>
+        <Label>Job Bookings</Label>
       </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="manifest">
-        <Icon sf={{ default: "doc.text", selected: "doc.text.fill" }} />
-        <Label>Manifest</Label>
+      <NativeTabs.Trigger name="tracking">
+        <Icon sf={{ default: "location", selected: "location.fill" }} />
+        <Label>Live Tracking</Label>
       </NativeTabs.Trigger>
     </NativeTabs>
   );
@@ -30,16 +31,15 @@ function NativeTabLayout() {
 
 function ClassicTabLayout() {
   const colors = useColors();
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === "dark";
+  const { mode } = useTheme();
   const isIOS = Platform.OS === "ios";
   const isWeb = Platform.OS === "web";
 
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: "#10B981",
-        tabBarInactiveTintColor: "#64748B",
+        tabBarActiveTintColor: colors.primary,
+        tabBarInactiveTintColor: colors.navInactive,
         headerShown: false,
         tabBarStyle: {
           position: "absolute",
@@ -53,7 +53,7 @@ function ClassicTabLayout() {
           isIOS ? (
             <BlurView
               intensity={100}
-              tint={isDark ? "dark" : "light"}
+              tint={mode === "dark" ? "dark" : "light"}
               style={StyleSheet.absoluteFill}
             />
           ) : isWeb ? (
@@ -65,7 +65,7 @@ function ClassicTabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: "Dashboard",
+          title: "Home",
           tabBarIcon: ({ color }) =>
             isIOS ? (
               <SymbolView name="house" tintColor={color} size={22} />
@@ -77,7 +77,7 @@ function ClassicTabLayout() {
       <Tabs.Screen
         name="jobs"
         options={{
-          title: "Jobs",
+          title: "Job Bookings",
           tabBarIcon: ({ color }) =>
             isIOS ? (
               <SymbolView name="briefcase" tintColor={color} size={22} />
@@ -87,14 +87,14 @@ function ClassicTabLayout() {
         }}
       />
       <Tabs.Screen
-        name="manifest"
+        name="tracking"
         options={{
-          title: "Manifest",
+          title: "Live Tracking",
           tabBarIcon: ({ color }) =>
             isIOS ? (
-              <SymbolView name="doc.text" tintColor={color} size={22} />
+              <SymbolView name="location" tintColor={color} size={22} />
             ) : (
-              <SVGIcon name="file-text" size={22} color={color} strokeWidth={2} />
+              <SVGIcon name="map-pin" size={22} color={color} strokeWidth={2} />
             ),
         }}
       />

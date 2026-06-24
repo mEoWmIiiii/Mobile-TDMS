@@ -343,6 +343,40 @@ export function Icon({ name, size = 20, color = "#000", strokeWidth = 2 }: IconP
           <Line x1="12" y1="16" x2="12.01" y2="16" />
         </Svg>
       );
+    case "chevron-right":
+      return (
+        <Svg {...props}>
+          <Polyline points="9 18 15 12 9 6" />
+        </Svg>
+      );
+    case "sun":
+      return (
+        <Svg {...props}>
+          <Circle cx="12" cy="12" r="5" />
+          <Line x1="12" y1="1" x2="12" y2="3" />
+          <Line x1="12" y1="21" x2="12" y2="23" />
+          <Line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+          <Line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+          <Line x1="1" y1="12" x2="3" y2="12" />
+          <Line x1="21" y1="12" x2="23" y2="12" />
+          <Line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+          <Line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+        </Svg>
+      );
+    case "moon":
+      return (
+        <Svg {...props}>
+          <Path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+        </Svg>
+      );
+    case "upload-cloud":
+      return (
+        <Svg {...props}>
+          <Polyline points="16 16 12 12 8 16" />
+          <Line x1="12" y1="12" x2="12" y2="21" />
+          <Path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3" />
+        </Svg>
+      );
     default:
       return (
         <Svg {...props}>

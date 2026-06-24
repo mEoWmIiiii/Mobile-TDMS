@@ -18,9 +18,11 @@ import { KPICard } from "@/components/KPICard";
 import { StatusBadge } from "@/components/StatusBadge";
 import { JOBS, KPIS, TRUCKS } from "@/data/mockData";
 import { useColors } from "@/hooks/useColors";
+import { useTheme } from "@/contexts/ThemeContext";
 
 export default function DashboardScreen() {
   const colors = useColors();
+  const { mode, toggle } = useTheme();
   const insets = useSafeAreaInsets();
   const [refreshing, setRefreshing] = useState(false);
   const [truckProgresses, setTruckProgresses] = useState(
@@ -40,9 +42,7 @@ export default function DashboardScreen() {
       setTruckProgresses((prev) =>
         prev.map((p, i) => {
           const truck = TRUCKS[i];
-          if (truck.status === "moving") {
-            return Math.min(100, p + Math.random() * 2);
-          }
+          if (truck.status === "moving") return Math.min(100, p + Math.random() * 2);
           return p;
         })
       );
@@ -54,14 +54,10 @@ export default function DashboardScreen() {
     (id: string) => {
       const isOpen = expandedJob === id;
       if (!isOpen && expandedJob) {
-        Animated.timing(animRefs.current[expandedJob], {
-          toValue: 0, duration: 200, useNativeDriver: false,
-        }).start();
+        Animated.timing(animRefs.current[expandedJob], { toValue: 0, duration: 200, useNativeDriver: false }).start();
       }
       setExpandedJob(isOpen ? null : id);
-      Animated.timing(animRefs.current[id], {
-        toValue: isOpen ? 0 : 1, duration: 260, useNativeDriver: false,
-      }).start();
+      Animated.timing(animRefs.current[id], { toValue: isOpen ? 0 : 1, duration: 260, useNativeDriver: false }).start();
     },
     [expandedJob]
   );
@@ -81,10 +77,23 @@ export default function DashboardScreen() {
           <Text style={[styles.title, { color: colors.foreground }]}>Dashboard</Text>
         </View>
         <View style={styles.headerRight}>
+          {/* Theme toggle */}
+          <TouchableOpacity
+            style={[styles.iconBtn, { backgroundColor: colors.secondary }]}
+            onPress={toggle}
+            accessibilityLabel="Toggle theme"
+          >
+            <Icon
+              name={mode === "dark" ? "sun" : "moon"}
+              size={17}
+              color={mode === "dark" ? "#F59E0B" : "#60A5FA"}
+              strokeWidth={1.8}
+            />
+          </TouchableOpacity>
           <TouchableOpacity style={[styles.iconBtn, { backgroundColor: colors.secondary }]}>
             <Icon name="bell" size={18} color={colors.foreground} />
           </TouchableOpacity>
-          <View style={styles.avatar}>
+          <View style={[styles.avatar, { backgroundColor: colors.primary }]}>
             <Text style={styles.avatarText}>JD</Text>
           </View>
         </View>
@@ -95,17 +104,13 @@ export default function DashboardScreen() {
       <ScrollView
         style={{ flex: 1 }}
         showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
-        }
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
         contentContainerStyle={{ paddingBottom: 100 }}
       >
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.foreground }]}>Fleet Overview</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            {KPIS.map((kpi) => (
-              <KPICard key={kpi.label} kpi={kpi} />
-            ))}
+            {KPIS.map((kpi) => <KPICard key={kpi.label} kpi={kpi} />)}
           </ScrollView>
         </View>
 
@@ -113,9 +118,7 @@ export default function DashboardScreen() {
           <View style={styles.sectionHeader}>
             <View>
               <Text style={[styles.sectionTitle, { color: colors.foreground }]}>Shipment Overview</Text>
-              <Text style={[styles.sectionMeta, { color: colors.mutedForeground }]}>
-                {JOBS.length} records · Today
-              </Text>
+              <Text style={[styles.sectionMeta, { color: colors.mutedForeground }]}>{JOBS.length} records · Today</Text>
             </View>
             <TouchableOpacity style={[styles.filterBtn, { borderColor: colors.border, backgroundColor: colors.card }]}>
               <Icon name="sliders" size={13} color={colors.mutedForeground} />
@@ -145,12 +148,8 @@ export default function DashboardScreen() {
                     ]}
                   >
                     <Text style={[styles.jobId, { color: colors.primary }]}>{job.id}</Text>
-                    <Text style={[styles.customerName, { color: colors.foreground }]} numberOfLines={1}>
-                      {job.customer}
-                    </Text>
-                    <Text style={[styles.routeText, { color: colors.mutedForeground }]} numberOfLines={1}>
-                      {job.origin} → {job.destination}
-                    </Text>
+                    <Text style={[styles.customerName, { color: colors.foreground }]} numberOfLines={1}>{job.customer}</Text>
+                    <Text style={[styles.routeText, { color: colors.mutedForeground }]} numberOfLines={1}>{job.origin} → {job.destination}</Text>
                     <StatusBadge status={job.status} small />
                   </Pressable>
                   <Animated.View style={{ maxHeight: maxH, overflow: "hidden" }}>
@@ -164,9 +163,7 @@ export default function DashboardScreen() {
                         <ExpandDetail label="Date" value={job.date} />
                       </View>
                       {job.remarks && (
-                        <Text style={[styles.remarks, { color: colors.mutedForeground }]}>
-                          ⚠ {job.remarks}
-                        </Text>
+                        <Text style={[styles.remarks, { color: colors.mutedForeground }]}>⚠ {job.remarks}</Text>
                       )}
                     </View>
                   </Animated.View>
@@ -174,9 +171,7 @@ export default function DashboardScreen() {
               );
             })}
           </View>
-          <Text style={[styles.tapHint, { color: colors.mutedForeground }]}>
-            Tap any row for quick actions
-          </Text>
+          <Text style={[styles.tapHint, { color: colors.mutedForeground }]}>Tap any row for quick actions</Text>
         </View>
 
         <View style={styles.section}>
@@ -187,7 +182,7 @@ export default function DashboardScreen() {
             return (
               <View key={truck.id} style={[styles.trackerCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
                 <View style={styles.trackerRow}>
-                  <View style={[styles.truckDot, { backgroundColor: truck.status === "alert" ? "#F59E0B" : "#10B981" }]} />
+                  <View style={[styles.truckDot, { backgroundColor: truck.status === "alert" ? "#F59E0B" : colors.primary }]} />
                   <View style={{ flex: 1 }}>
                     <Text style={[styles.truckId, { color: colors.foreground }]}>{truck.id} · {truck.type}</Text>
                     <View style={{ flexDirection: "row", alignItems: "center", gap: 4, marginTop: 2 }}>
@@ -200,7 +195,10 @@ export default function DashboardScreen() {
                   </Text>
                 </View>
                 <View style={[styles.progressTrack, { backgroundColor: colors.secondary }]}>
-                  <View style={[styles.progressFill, { width: `${Math.round(progress)}%` as any, backgroundColor: truck.status === "alert" ? "#F59E0B" : "#10B981" }]} />
+                  <View style={[styles.progressFill, {
+                    width: `${Math.round(progress)}%` as any,
+                    backgroundColor: truck.status === "alert" ? "#F59E0B" : colors.primary,
+                  }]} />
                 </View>
                 <View style={styles.progressLabels}>
                   <Text style={[styles.progressLabel, { color: colors.mutedForeground }]}>Origin</Text>
@@ -231,9 +229,9 @@ const styles = StyleSheet.create({
   header: { flexDirection: "row", alignItems: "flex-end", justifyContent: "space-between", paddingHorizontal: 20, paddingBottom: 16, borderBottomWidth: 1 },
   subtitle: { fontSize: 11, fontWeight: "600" as const, letterSpacing: 1.2 },
   title: { fontSize: 26, fontWeight: "700" as const, letterSpacing: -0.5 },
-  headerRight: { flexDirection: "row", alignItems: "center", gap: 10 },
+  headerRight: { flexDirection: "row", alignItems: "center", gap: 8 },
   iconBtn: { width: 38, height: 38, borderRadius: 19, alignItems: "center", justifyContent: "center" },
-  avatar: { width: 38, height: 38, borderRadius: 19, backgroundColor: "#0F172A", alignItems: "center", justifyContent: "center" },
+  avatar: { width: 38, height: 38, borderRadius: 19, alignItems: "center", justifyContent: "center" },
   avatarText: { color: "#FFFFFF", fontSize: 13, fontWeight: "700" as const },
   section: { paddingHorizontal: 16, paddingTop: 20 },
   sectionHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 12 },

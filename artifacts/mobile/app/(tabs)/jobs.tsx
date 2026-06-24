@@ -1,6 +1,7 @@
 import React, { useCallback, useRef, useState } from "react";
 import {
   Animated,
+  Easing,
   FlatList,
   Modal,
   Platform,
@@ -13,6 +14,7 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import Svg, { Circle } from "react-native-svg";
 import * as Haptics from "expo-haptics";
 
 import { Icon } from "@/components/Icon";
@@ -23,16 +25,19 @@ import { useColors } from "@/hooks/useColors";
 const TRANSPORT_MODES = ["Land", "Air"] as const;
 const CARGO_TYPES = ["Electronics", "Food Products", "Construction", "Clothing", "Medical Supplies", "Office Supplies", "Other"];
 const JOB_STATUSES: JobStatus[] = ["IN_TRANSIT", "PENDING", "DELIVERED", "DELAYED", "FOR_DISPATCH", "CONFIRMED"];
+const MARKINGS_OPTIONS = ["FRAGILE", "HAZARDOUS", "THIS SIDE UP", "ROUTING SEAL", "PERISHABLE"];
 
 const MARKING_COLORS: Record<string, { bg: string; text: string; iconName: "shield" | "alert-octagon" | "thermometer" | "arrow-up" | "heart" | "wind" | "tag" }> = {
   FRAGILE: { bg: "#EFF6FF", text: "#1D4ED8", iconName: "shield" },
   "THIS SIDE UP": { bg: "#F0FDF4", text: "#15803D", iconName: "arrow-up" },
   HAZARDOUS: { bg: "#FEF2F2", text: "#B91C1C", iconName: "alert-octagon" },
-  "HANDLE WITH CARE": { bg: "#FFFBEB", text: "#B45309", iconName: "heart" },
   PERISHABLE: { bg: "#F0FDF4", text: "#065F46", iconName: "thermometer" },
-  "KEEP COOL": { bg: "#EFF6FF", text: "#1E40AF", iconName: "wind" },
   "ROUTING SEAL": { bg: "#F5F3FF", text: "#6D28D9", iconName: "tag" },
 };
+
+type PodPhase = "idle" | "capture" | "uploading" | "complete";
+
+const CIRC = 2 * Math.PI * 26; // circumference for r=26
 
 export default function JobsScreen() {
   const colors = useColors();
@@ -43,65 +48,113 @@ export default function JobsScreen() {
   const animRefs = useRef<Record<string, Animated.Value>>({});
   const [filterStatus, setFilterStatus] = useState<JobStatus | null>(null);
   const [plateNumber, setPlateNumber] = useState("");
+  const [localStatuses, setLocalStatuses] = useState<Record<string, JobStatus>>(
+    Object.fromEntries(JOBS.map((j) => [j.id, j.status]))
+  );
 
+  // POD state
+  const [podJobId, setPodJobId] = useState<string | null>(null);
+  const [podPhase, setPodPhase] = useState<PodPhase>("idle");
+  const uploadProgress = useRef(new Animated.Value(0)).current;
+  const airFieldsHeight = useRef(new Animated.Value(0)).current;
+
+  // New booking form
   const [form, setForm] = useState({
-    customer: "",
-    contact: "",
-    origin: "",
-    destination: "",
-    weight: "",
+    customer: "", contact: "", origin: "", destination: "",
+    weight: "", qty: "", dims: "",
     mode: "Land" as "Land" | "Air",
-    cargoType: "",
-    remarks: "",
+    cargoType: "", remarks: "",
+    hawb: "", cutoff: "1300H",
+    selectedMarkings: [] as string[],
   });
 
   JOBS.forEach((job) => {
-    if (!animRefs.current[job.id]) {
-      animRefs.current[job.id] = new Animated.Value(0);
-    }
+    if (!animRefs.current[job.id]) animRefs.current[job.id] = new Animated.Value(0);
   });
 
-  const toggleExpand = useCallback(
-    (id: string) => {
-      const isOpen = expandedId === id;
-      if (!isOpen && expandedId) {
-        Animated.timing(animRefs.current[expandedId], {
-          toValue: 0, duration: 200, useNativeDriver: false,
-        }).start();
-      }
-      setExpandedId(isOpen ? null : id);
-      Animated.timing(animRefs.current[id], {
-        toValue: isOpen ? 0 : 1, duration: 260, useNativeDriver: false,
-      }).start();
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    },
-    [expandedId]
-  );
+  const toggleExpand = useCallback((id: string) => {
+    const isOpen = expandedId === id;
+    if (!isOpen && expandedId) {
+      Animated.timing(animRefs.current[expandedId], { toValue: 0, duration: 200, useNativeDriver: false }).start();
+    }
+    setExpandedId(isOpen ? null : id);
+    Animated.timing(animRefs.current[id], { toValue: isOpen ? 0 : 1, duration: 260, useNativeDriver: false }).start();
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  }, [expandedId]);
+
+  const setMode = (mode: "Land" | "Air") => {
+    setForm((f) => ({ ...f, mode }));
+    Animated.timing(airFieldsHeight, {
+      toValue: mode === "Air" ? 1 : 0,
+      duration: 300,
+      easing: Easing.inOut(Easing.ease),
+      useNativeDriver: false,
+    }).start();
+  };
+
+  const toggleMarking = (m: string) => {
+    setForm((f) => ({
+      ...f,
+      selectedMarkings: f.selectedMarkings.includes(m)
+        ? f.selectedMarkings.filter((x) => x !== m)
+        : [...f.selectedMarkings, m],
+    }));
+  };
+
+  const openPOD = (jobId: string) => {
+    setPodJobId(jobId);
+    setPodPhase("capture");
+    uploadProgress.setValue(0);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+  };
+
+  const startUpload = () => {
+    setPodPhase("uploading");
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    Animated.timing(uploadProgress, {
+      toValue: 1,
+      duration: 2800,
+      easing: Easing.inOut(Easing.ease),
+      useNativeDriver: false,
+    }).start(() => {
+      setPodPhase("complete");
+      if (podJobId) setLocalStatuses((prev) => ({ ...prev, [podJobId]: "DELIVERED" }));
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    });
+  };
+
+  const closePOD = () => {
+    setPodJobId(null);
+    setPodPhase("idle");
+    uploadProgress.setValue(0);
+  };
+
+  const getStatus = (job: Job): JobStatus => localStatuses[job.id] ?? job.status;
 
   const filtered = JOBS.filter((job) => {
     const q = search.toLowerCase();
-    const matchSearch =
-      !search ||
-      job.id.toLowerCase().includes(q) ||
-      job.customer.toLowerCase().includes(q) ||
-      job.origin.toLowerCase().includes(q) ||
-      job.destination.toLowerCase().includes(q);
-    const matchStatus = !filterStatus || job.status === filterStatus;
+    const matchSearch = !search || job.id.toLowerCase().includes(q) || job.customer.toLowerCase().includes(q);
+    const matchStatus = !filterStatus || getStatus(job) === filterStatus;
     return matchSearch && matchStatus;
   });
 
   const topPad = Platform.OS === "web" ? 67 : insets.top;
+  const getManifest = (jobId: string) => MANIFESTS[JOBS.findIndex((j) => j.id === jobId) % MANIFESTS.length];
 
-  const getManifestForJob = (jobId: string) => {
-    const idx = JOBS.findIndex((j) => j.id === jobId);
-    return MANIFESTS[idx % MANIFESTS.length];
-  };
+  const airHeight = airFieldsHeight.interpolate({ inputRange: [0, 1], outputRange: [0, 320] });
+
+  const strokeDash = uploadProgress.interpolate({
+    inputRange: [0, 1],
+    outputRange: [CIRC, 0],
+  });
 
   const renderJob = ({ item: job }: { item: Job }) => {
     const anim = animRefs.current[job.id];
     if (!anim) return null;
-    const maxH = anim.interpolate({ inputRange: [0, 1], outputRange: [0, 520] });
-    const manifest = getManifestForJob(job.id);
+    const maxH = anim.interpolate({ inputRange: [0, 1], outputRange: [0, 540] });
+    const manifest = getManifest(job.id);
+    const status = getStatus(job);
+    const isActive = status === "IN_TRANSIT" || status === "FOR_DISPATCH";
 
     return (
       <View style={[styles.jobCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
@@ -109,7 +162,7 @@ export default function JobsScreen() {
           onPress={() => toggleExpand(job.id)}
           style={({ pressed }) => [styles.jobHeader, pressed && { opacity: 0.75 }]}
         >
-          <View style={[styles.initials, { backgroundColor: "#0F172A" }]}>
+          <View style={[styles.initials, { backgroundColor: colors.primary }]}>
             <Text style={styles.initialsText}>{job.driverInitials}</Text>
           </View>
           <View style={{ flex: 1 }}>
@@ -117,35 +170,25 @@ export default function JobsScreen() {
               <Text style={[styles.jobId, { color: colors.primary }]}>{job.id}</Text>
               <Text style={[styles.jobDate, { color: colors.mutedForeground }]}>{job.date}</Text>
             </View>
-            <Text style={[styles.customerName, { color: colors.foreground }]} numberOfLines={1}>
-              {job.customer}
-            </Text>
+            <Text style={[styles.customerName, { color: colors.foreground }]} numberOfLines={1}>{job.customer}</Text>
             <View style={styles.routeRow}>
               <Icon name="map-pin" size={11} color={colors.mutedForeground} />
-              <Text style={[styles.routeText, { color: colors.mutedForeground }]}>
-                {job.origin} → {job.destination}
-              </Text>
+              <Text style={[styles.routeText, { color: colors.mutedForeground }]}>{job.origin} → {job.destination}</Text>
             </View>
           </View>
           <View style={styles.jobHeaderRight}>
-            <StatusBadge status={job.status} />
-            <Icon
-              name={expandedId === job.id ? "chevron-up" : "chevron-down"}
-              size={16}
-              color={colors.mutedForeground}
-            />
+            <StatusBadge status={status} />
+            <Icon name={expandedId === job.id ? "chevron-up" : "chevron-down"} size={16} color={colors.mutedForeground} />
           </View>
         </Pressable>
 
         <Animated.View style={{ maxHeight: maxH, overflow: "hidden" }}>
           <View style={[styles.expandBody, { borderTopColor: colors.border }]}>
-
-            {/* Driver & Cargo Details */}
             <Text style={[styles.expandSection, { color: colors.mutedForeground }]}>CARGO & DISPATCH</Text>
             <View style={styles.detailGrid}>
               <DetailItem label="Driver" value={job.driver} />
               <DetailItem label="Truck" value={job.truck} />
-              <DetailItem label="Cargo Type" value={job.cargo} />
+              <DetailItem label="Cargo" value={job.cargo} />
               <DetailItem label="Weight" value={`${job.weight} kg`} />
               <DetailItem label="Mode" value={job.mode} />
               <DetailItem label="Contact" value={job.contact} />
@@ -158,7 +201,7 @@ export default function JobsScreen() {
               </View>
             )}
 
-            {/* Manifest Reference Block */}
+            {/* Manifest block */}
             <View style={[styles.manifestBlock, { backgroundColor: colors.secondary, borderColor: colors.border }]}>
               <View style={styles.manifestHeaderRow}>
                 <View style={{ flex: 1 }}>
@@ -171,8 +214,6 @@ export default function JobsScreen() {
                   <Text style={styles.cutoffTime}>{manifest.cutoff}</Text>
                 </View>
               </View>
-
-              {/* Nested Reference + System Logs */}
               <View style={[styles.refRow, { borderColor: colors.border }]}>
                 <View style={styles.refBlock}>
                   <Text style={[styles.refLabel, { color: colors.mutedForeground }]}>HAWB NUMBER</Text>
@@ -186,8 +227,6 @@ export default function JobsScreen() {
                   <Text style={[styles.refSub, { color: colors.primary }]}>Auto-stamped</Text>
                 </View>
               </View>
-
-              {/* Inline Metrics Block */}
               <View style={[styles.metricsRow, { borderColor: colors.border }]}>
                 <MetricBlock label="QTY" value={`${manifest.qty} pcs`} color="#3B82F6" />
                 <View style={[styles.metricDivider, { backgroundColor: colors.border }]} />
@@ -195,14 +234,10 @@ export default function JobsScreen() {
                 <View style={[styles.metricDivider, { backgroundColor: colors.border }]} />
                 <MetricBlock label="DIMENSIONS" value={manifest.dimensions} color="#F59E0B" />
               </View>
-
-              {/* Special Instructions Block */}
               <View style={styles.specialBlock}>
                 <View style={styles.specialHeader}>
                   <Icon name="alert-triangle" size={12} color="#B45309" />
-                  <Text style={[styles.specialTitle, { color: colors.mutedForeground }]}>
-                    MARKINGS / LABELS
-                  </Text>
+                  <Text style={[styles.specialTitle, { color: colors.mutedForeground }]}>MARKINGS / LABELS</Text>
                 </View>
                 <View style={styles.markingsList}>
                   {manifest.markings.map((m) => {
@@ -218,12 +253,29 @@ export default function JobsScreen() {
               </View>
             </View>
 
-            {/* Action Buttons */}
+            {/* Action buttons */}
             <View style={styles.actionRow}>
               <ActionButton icon="phone" label="Call" color={colors.primary} />
-              <ActionButton icon="navigation" label="Navigate" color="#3B82F6" />
-              <ActionButton icon="camera" label="POD" color="#8B5CF6" />
+              <ActionButton icon="navigation" label="Navigate" color="#60A5FA" />
             </View>
+
+            {/* POD button — only for active jobs */}
+            {isActive && status !== "DELIVERED" && (
+              <TouchableOpacity
+                style={[styles.podBtn, { backgroundColor: colors.primary }]}
+                onPress={() => openPOD(job.id)}
+                activeOpacity={0.8}
+              >
+                <Icon name="camera" size={16} color="#fff" strokeWidth={2.5} />
+                <Text style={styles.podBtnText}>Complete Delivery (POD)</Text>
+              </TouchableOpacity>
+            )}
+            {status === "DELIVERED" && (
+              <View style={[styles.deliveredBadge, { backgroundColor: "#ECFDF5", borderColor: "#6EE7B7" }]}>
+                <Icon name="check-circle" size={15} color="#059669" />
+                <Text style={[styles.deliveredText, { color: "#059669" }]}>POD Documentation Submitted</Text>
+              </View>
+            )}
           </View>
         </Animated.View>
       </View>
@@ -296,13 +348,8 @@ export default function JobsScreen() {
         }
       />
 
-      {/* New Booking Modal */}
-      <Modal
-        visible={showModal}
-        animationType="slide"
-        presentationStyle="pageSheet"
-        onRequestClose={() => setShowModal(false)}
-      >
+      {/* ── New Booking Modal ── */}
+      <Modal visible={showModal} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setShowModal(false)}>
         <View style={[styles.modalRoot, { backgroundColor: colors.background }]}>
           <View style={[styles.modalHeader, { borderBottomColor: colors.border }]}>
             <View style={[styles.modalBadge, { backgroundColor: colors.primary }]}>
@@ -317,82 +364,103 @@ export default function JobsScreen() {
             </TouchableOpacity>
           </View>
 
-          <ScrollView style={styles.modalScroll} contentContainerStyle={{ padding: 16, gap: 16, paddingBottom: 100 }} keyboardShouldPersistTaps="handled">
-
+          <ScrollView style={styles.modalScroll} contentContainerStyle={{ padding: 16, gap: 14, paddingBottom: 100 }} keyboardShouldPersistTaps="handled">
             <FormRow label="CUSTOMER NAME *">
-              <TextInput
-                style={[styles.formInput, { backgroundColor: colors.card, borderColor: colors.border, color: colors.foreground }]}
-                placeholder="Enter name"
-                placeholderTextColor={colors.mutedForeground}
-                value={form.customer}
-                onChangeText={(v) => setForm({ ...form, customer: v })}
-              />
+              <TextInput style={[styles.formInput, { backgroundColor: colors.card, borderColor: colors.border, color: colors.foreground }]} placeholder="Enter name" placeholderTextColor={colors.mutedForeground} value={form.customer} onChangeText={(v) => setForm({ ...form, customer: v })} />
             </FormRow>
-
             <FormRow label="CONTACT">
-              <TextInput
-                style={[styles.formInput, { backgroundColor: colors.card, borderColor: colors.border, color: colors.foreground }]}
-                placeholder="+63 900 000 0000"
-                placeholderTextColor={colors.mutedForeground}
-                keyboardType="phone-pad"
-                value={form.contact}
-                onChangeText={(v) => setForm({ ...form, contact: v })}
-              />
+              <TextInput style={[styles.formInput, { backgroundColor: colors.card, borderColor: colors.border, color: colors.foreground }]} placeholder="+63 900 000 0000" placeholderTextColor={colors.mutedForeground} keyboardType="phone-pad" value={form.contact} onChangeText={(v) => setForm({ ...form, contact: v })} />
             </FormRow>
-
             <View style={styles.twoCol}>
               <FormRow label="ORIGIN *" style={{ flex: 1 }}>
-                <TextInput
-                  style={[styles.formInput, { backgroundColor: colors.card, borderColor: colors.border, color: colors.foreground }]}
-                  placeholder="e.g. Cebu City"
-                  placeholderTextColor={colors.mutedForeground}
-                  value={form.origin}
-                  onChangeText={(v) => setForm({ ...form, origin: v })}
-                />
+                <TextInput style={[styles.formInput, { backgroundColor: colors.card, borderColor: colors.border, color: colors.foreground }]} placeholder="e.g. Cebu City" placeholderTextColor={colors.mutedForeground} value={form.origin} onChangeText={(v) => setForm({ ...form, origin: v })} />
               </FormRow>
               <FormRow label="DESTINATION *" style={{ flex: 1 }}>
-                <TextInput
-                  style={[styles.formInput, { backgroundColor: colors.card, borderColor: colors.border, color: colors.foreground }]}
-                  placeholder="e.g. Manila"
-                  placeholderTextColor={colors.mutedForeground}
-                  value={form.destination}
-                  onChangeText={(v) => setForm({ ...form, destination: v })}
-                />
+                <TextInput style={[styles.formInput, { backgroundColor: colors.card, borderColor: colors.border, color: colors.foreground }]} placeholder="e.g. Manila" placeholderTextColor={colors.mutedForeground} value={form.destination} onChangeText={(v) => setForm({ ...form, destination: v })} />
               </FormRow>
             </View>
 
-            {/* Transport Mode Toggle */}
+            {/* Transport Mode Segmented Control */}
             <FormRow label="TRANSPORT MODE">
               <View style={[styles.segmentControl, { backgroundColor: colors.secondary, borderColor: colors.border }]}>
                 {TRANSPORT_MODES.map((mode) => (
                   <TouchableOpacity
                     key={mode}
                     style={[styles.segment, form.mode === mode && { backgroundColor: colors.card, borderColor: colors.primary }]}
-                    onPress={() => setForm({ ...form, mode })}
+                    onPress={() => setMode(mode)}
                   >
-                    <Icon
-                      name={mode === "Land" ? "truck" : "send"}
-                      size={14}
-                      color={form.mode === mode ? colors.primary : colors.mutedForeground}
-                    />
+                    <Icon name={mode === "Land" ? "truck" : "send"} size={14} color={form.mode === mode ? colors.primary : colors.mutedForeground} />
                     <Text style={[styles.segmentText, { color: form.mode === mode ? colors.primary : colors.mutedForeground }]}>
-                      {mode} {mode === "Air" ? "Cargo" : "Cargo"}
+                      {mode === "Air" ? "Air Cargo" : "Land Cargo"}
                     </Text>
                   </TouchableOpacity>
                 ))}
               </View>
             </FormRow>
 
-            {/* Trucker App Number — auto-filled */}
+            {/* Air Cargo dynamic fields */}
+            <Animated.View style={{ maxHeight: airHeight, overflow: "hidden" }}>
+              <View style={[styles.airBlock, { backgroundColor: colors.secondary, borderColor: colors.border }]}>
+                <View style={styles.airBlockHeader}>
+                  <Icon name="send" size={13} color={colors.primary} />
+                  <Text style={[styles.airBlockTitle, { color: colors.primary }]}>Air Manifest Details</Text>
+                </View>
+                <FormRow label="HAWB NUMBER">
+                  <TextInput style={[styles.formInput, { backgroundColor: colors.card, borderColor: colors.border, color: colors.foreground }]} placeholder="e.g. HAWB-0789" placeholderTextColor={colors.mutedForeground} value={form.hawb} onChangeText={(v) => setForm({ ...form, hawb: v })} />
+                </FormRow>
+                <FormRow label="CUT-OFF TIME">
+                  <View style={[styles.cutoffInputRow, { backgroundColor: colors.card, borderColor: colors.border }]}>
+                    <Text style={[styles.cutoffInputValue, { color: "#B91C1C" }]}>{form.cutoff}</Text>
+                    <View style={styles.cutoffBtns}>
+                      {["1100H", "1300H", "1500H", "1700H"].map((t) => (
+                        <TouchableOpacity key={t} style={[styles.cutoffOption, form.cutoff === t && { backgroundColor: "#FEF2F2", borderColor: "#F87171" }, { borderColor: colors.border }]} onPress={() => setForm({ ...form, cutoff: t })}>
+                          <Text style={[styles.cutoffOptionText, { color: form.cutoff === t ? "#B91C1C" : colors.mutedForeground }]}>{t}</Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  </View>
+                </FormRow>
+                <View style={styles.twoCol}>
+                  <FormRow label="QTY (PCS)" style={{ flex: 1 }}>
+                    <TextInput style={[styles.formInput, { backgroundColor: colors.card, borderColor: colors.border, color: colors.foreground }]} placeholder="0" placeholderTextColor={colors.mutedForeground} keyboardType="numeric" value={form.qty} onChangeText={(v) => setForm({ ...form, qty: v })} />
+                  </FormRow>
+                  <FormRow label="WEIGHT (KG)" style={{ flex: 1 }}>
+                    <TextInput style={[styles.formInput, { backgroundColor: colors.card, borderColor: colors.border, color: colors.foreground }]} placeholder="0.0" placeholderTextColor={colors.mutedForeground} keyboardType="numeric" value={form.weight} onChangeText={(v) => setForm({ ...form, weight: v })} />
+                  </FormRow>
+                </View>
+                <FormRow label="DIMENSIONS (L × W × H cm)">
+                  <TextInput style={[styles.formInput, { backgroundColor: colors.card, borderColor: colors.border, color: colors.foreground }]} placeholder="e.g. 60×40×30" placeholderTextColor={colors.mutedForeground} value={form.dims} onChangeText={(v) => setForm({ ...form, dims: v })} />
+                </FormRow>
+                <FormRow label="MARKINGS / LABELS">
+                  <View style={styles.markingsGrid}>
+                    {MARKINGS_OPTIONS.map((m) => {
+                      const selected = form.selectedMarkings.includes(m);
+                      const cfg = MARKING_COLORS[m] ?? { bg: "#F1F5F9", text: "#475569", iconName: "tag" as const };
+                      return (
+                        <TouchableOpacity
+                          key={m}
+                          style={[styles.markingToggle, { backgroundColor: selected ? cfg.bg : colors.card, borderColor: selected ? cfg.text + "60" : colors.border }]}
+                          onPress={() => toggleMarking(m)}
+                        >
+                          <Icon name={cfg.iconName} size={12} color={selected ? cfg.text : colors.mutedForeground} />
+                          <Text style={[styles.markingToggleText, { color: selected ? cfg.text : colors.mutedForeground }]}>{m}</Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+                </FormRow>
+              </View>
+            </Animated.View>
+
+            {/* Auto-fill fields */}
             <FormRow label="TRUCKER APP NO.">
-              <View style={[styles.autoFillRow, { backgroundColor: "#ECFDF5", borderColor: "#A7F3D0" }]}>
-                <Icon name="check-circle" size={15} color="#059669" />
-                <Text style={[styles.autoFillText, { color: "#065F46" }]}>TRK-APP-20240001</Text>
-                <Text style={[styles.autoFillBadge]}>Auto-filled</Text>
+              <View style={[styles.autoFillRow, { backgroundColor: "#1A3A1A", borderColor: "#2D6A2D" }]}>
+                <Icon name="check-circle" size={15} color="#4ADE80" />
+                <Text style={[styles.autoFillText, { color: "#4ADE80" }]}>TRK-APP-20240001</Text>
+                <Text style={styles.autoFillBadge}>Auto-filled</Text>
               </View>
             </FormRow>
 
-            {/* Vehicle Plate Number — auto-capitalizes */}
             <FormRow label="VEHICLE PLATE NO.">
               <TextInput
                 style={[styles.formInput, { backgroundColor: colors.card, borderColor: colors.border, color: colors.foreground, fontWeight: "700", letterSpacing: 2 }]}
@@ -405,21 +473,8 @@ export default function JobsScreen() {
               />
             </FormRow>
 
-            <View style={styles.twoCol}>
-              <FormRow label="WEIGHT (KG)" style={{ flex: 1 }}>
-                <TextInput
-                  style={[styles.formInput, { backgroundColor: colors.card, borderColor: colors.border, color: colors.foreground }]}
-                  placeholder="e.g. 500"
-                  placeholderTextColor={colors.mutedForeground}
-                  keyboardType="numeric"
-                  value={form.weight}
-                  onChangeText={(v) => setForm({ ...form, weight: v })}
-                />
-              </FormRow>
-            </View>
-
             <FormRow label="CARGO TYPE">
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 4 }}>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                 <View style={{ flexDirection: "row", gap: 8 }}>
                   {CARGO_TYPES.map((type) => (
                     <TouchableOpacity
@@ -427,9 +482,7 @@ export default function JobsScreen() {
                       style={[styles.cargoChip, { backgroundColor: form.cargoType === type ? colors.primary : colors.secondary, borderColor: form.cargoType === type ? colors.primary : colors.border }]}
                       onPress={() => setForm({ ...form, cargoType: type })}
                     >
-                      <Text style={[styles.cargoChipText, { color: form.cargoType === type ? "#fff" : colors.mutedForeground }]}>
-                        {type}
-                      </Text>
+                      <Text style={[styles.cargoChipText, { color: form.cargoType === type ? "#fff" : colors.mutedForeground }]}>{type}</Text>
                     </TouchableOpacity>
                   ))}
                 </View>
@@ -437,15 +490,7 @@ export default function JobsScreen() {
             </FormRow>
 
             <FormRow label="REMARKS">
-              <TextInput
-                style={[styles.formTextarea, { backgroundColor: colors.card, borderColor: colors.border, color: colors.foreground }]}
-                placeholder="Special instructions..."
-                placeholderTextColor={colors.mutedForeground}
-                multiline
-                numberOfLines={3}
-                value={form.remarks}
-                onChangeText={(v) => setForm({ ...form, remarks: v })}
-              />
+              <TextInput style={[styles.formTextarea, { backgroundColor: colors.card, borderColor: colors.border, color: colors.foreground }]} placeholder="Special instructions..." placeholderTextColor={colors.mutedForeground} multiline numberOfLines={3} value={form.remarks} onChangeText={(v) => setForm({ ...form, remarks: v })} />
             </FormRow>
           </ScrollView>
 
@@ -455,19 +500,119 @@ export default function JobsScreen() {
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.submitBtn, { backgroundColor: colors.primary }]}
-              onPress={() => {
-                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-                setShowModal(false);
-              }}
+              onPress={() => { Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success); setShowModal(false); }}
             >
               <Text style={styles.submitText}>Create Booking</Text>
             </TouchableOpacity>
           </View>
         </View>
       </Modal>
+
+      {/* ── POD Sheet ── */}
+      <Modal visible={podJobId !== null} animationType="slide" presentationStyle="pageSheet" onRequestClose={closePOD}>
+        <View style={[styles.podRoot, { backgroundColor: colors.background }]}>
+          <View style={[styles.podHeader, { borderBottomColor: colors.border }]}>
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.podTitle, { color: colors.foreground }]}>Proof of Delivery</Text>
+              <Text style={[styles.podSub, { color: colors.mutedForeground }]}>{podJobId} · Photo Documentation</Text>
+            </View>
+            {podPhase !== "uploading" && (
+              <TouchableOpacity onPress={closePOD}>
+                <Icon name="x" size={22} color={colors.foreground} />
+              </TouchableOpacity>
+            )}
+          </View>
+
+          <View style={styles.podBody}>
+            {/* Camera frame */}
+            {podPhase !== "complete" && (
+              <View style={[styles.cameraFrame, { borderColor: colors.primary, backgroundColor: colors.secondary }]}>
+                {/* Corner brackets */}
+                {[["tl", 0, 0], ["tr", undefined, 0], ["bl", 0, undefined], ["br", undefined, undefined]].map(([key, top, right]) => (
+                  <View
+                    key={String(key)}
+                    style={[
+                      styles.corner,
+                      { borderColor: colors.primary },
+                      top === 0 ? { top: 8 } : { bottom: 8 },
+                      right === 0 ? { right: 8 } : { left: 8 },
+                    ]}
+                  />
+                ))}
+                <Icon name="camera" size={48} color={colors.primary + "60"} strokeWidth={1} />
+                <Text style={[styles.cameraLabel, { color: colors.mutedForeground }]}>
+                  {podPhase === "capture" ? "Position document in frame" : "Processing..."}
+                </Text>
+              </View>
+            )}
+
+            {/* Upload progress ring */}
+            {podPhase === "uploading" && (
+              <View style={styles.uploadRing}>
+                <Svg width={80} height={80} viewBox="0 0 60 60">
+                  <Circle cx="30" cy="30" r="26" stroke={colors.secondary} strokeWidth="5" fill="none" />
+                  <AnimatedCircle
+                    cx="30" cy="30" r="26"
+                    stroke={colors.primary}
+                    strokeWidth="5"
+                    fill="none"
+                    strokeDasharray={`${CIRC}`}
+                    strokeDashoffset={strokeDash}
+                    strokeLinecap="round"
+                    rotation="-90"
+                    origin="30, 30"
+                  />
+                </Svg>
+                <View style={styles.uploadRingCenter}>
+                  <Icon name="upload-cloud" size={22} color={colors.primary} />
+                </View>
+                <Text style={[styles.uploadLabel, { color: colors.foreground }]}>Uploading to cloud...</Text>
+                <Text style={[styles.uploadSub, { color: colors.mutedForeground }]}>Secure storage · Encrypted</Text>
+              </View>
+            )}
+
+            {/* Complete state */}
+            {podPhase === "complete" && (
+              <View style={styles.completeState}>
+                <View style={[styles.completeTick, { backgroundColor: "#ECFDF5" }]}>
+                  <Icon name="check-circle" size={52} color="#059669" />
+                </View>
+                <Text style={[styles.completeTitle, { color: colors.foreground }]}>POD Submitted!</Text>
+                <Text style={[styles.completeSub, { color: colors.mutedForeground }]}>
+                  Documentation uploaded. Job status updated to{" "}
+                  <Text style={{ color: "#059669", fontWeight: "700" }}>DELIVERED</Text>.
+                </Text>
+              </View>
+            )}
+
+            <View style={styles.podActions}>
+              {podPhase === "capture" && (
+                <>
+                  <TouchableOpacity style={[styles.captureBtn, { backgroundColor: colors.secondary, borderColor: colors.border }]}>
+                    <Icon name="camera" size={18} color={colors.foreground} />
+                    <Text style={[styles.captureBtnText, { color: colors.foreground }]}>Capture Photo / Signature</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={[styles.uploadBtn, { backgroundColor: colors.primary }]} onPress={startUpload}>
+                    <Icon name="upload-cloud" size={18} color="#fff" strokeWidth={2.5} />
+                    <Text style={styles.uploadBtnText}>Upload Documentation</Text>
+                  </TouchableOpacity>
+                </>
+              )}
+              {podPhase === "complete" && (
+                <TouchableOpacity style={[styles.uploadBtn, { backgroundColor: "#059669" }]} onPress={closePOD}>
+                  <Icon name="check" size={18} color="#fff" strokeWidth={2.5} />
+                  <Text style={styles.uploadBtnText}>Done — Close Sheet</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
+
+const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
 function DetailItem({ label, value }: { label: string; value: string }) {
   const colors = useColors();
@@ -489,7 +634,7 @@ function MetricBlock({ label, value, color }: { label: string; value: string; co
   );
 }
 
-function ActionButton({ icon, label, color }: { icon: "phone" | "navigation" | "camera"; label: string; color: string }) {
+function ActionButton({ icon, label, color }: { icon: "phone" | "navigation"; label: string; color: string }) {
   return (
     <TouchableOpacity style={[styles.actionBtn, { backgroundColor: color + "18", borderColor: color + "40" }]}>
       <Icon name={icon} size={15} color={color} />
@@ -539,7 +684,6 @@ const styles = StyleSheet.create({
   detailValue: { fontSize: 13, fontWeight: "500" as const, marginTop: 2 },
   remarksBox: { flexDirection: "row", gap: 8, padding: 10, borderRadius: 8, borderWidth: 1, alignItems: "flex-start" },
   remarksText: { fontSize: 12, color: "#B45309", flex: 1 },
-  // Manifest block
   manifestBlock: { borderRadius: 12, borderWidth: 1, overflow: "hidden" },
   manifestHeaderRow: { flexDirection: "row", padding: 12, gap: 10, alignItems: "flex-start" },
   manifestMawb: { fontSize: 12, fontWeight: "700" as const, marginBottom: 2 },
@@ -565,10 +709,13 @@ const styles = StyleSheet.create({
   markingsList: { flexDirection: "row", flexWrap: "wrap", gap: 6 },
   markingChip: { flexDirection: "row", alignItems: "center", gap: 5, paddingHorizontal: 9, paddingVertical: 5, borderRadius: 20 },
   markingText: { fontSize: 11, fontWeight: "600" as const },
-  // Actions
   actionRow: { flexDirection: "row", gap: 8 },
   actionBtn: { flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, paddingVertical: 11, borderRadius: 10, borderWidth: 1 },
   actionBtnText: { fontSize: 13, fontWeight: "600" as const },
+  podBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, paddingVertical: 14, borderRadius: 12 },
+  podBtnText: { color: "#fff", fontSize: 15, fontWeight: "700" as const },
+  deliveredBadge: { flexDirection: "row", alignItems: "center", gap: 8, padding: 12, borderRadius: 10, borderWidth: 1 },
+  deliveredText: { fontSize: 13, fontWeight: "600" as const },
   empty: { paddingTop: 80, alignItems: "center", gap: 12 },
   emptyText: { fontSize: 15 },
   // Modal
@@ -590,9 +737,42 @@ const styles = StyleSheet.create({
   segmentControl: { flexDirection: "row", borderRadius: 10, borderWidth: 1, overflow: "hidden", padding: 3, gap: 3 },
   segment: { flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, paddingVertical: 10, borderRadius: 8, borderWidth: 1, borderColor: "transparent" },
   segmentText: { fontSize: 13, fontWeight: "600" as const },
+  airBlock: { borderRadius: 12, borderWidth: 1, padding: 14, gap: 12 },
+  airBlockHeader: { flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 4 },
+  airBlockTitle: { fontSize: 13, fontWeight: "700" as const },
+  cutoffInputRow: { borderRadius: 10, borderWidth: 1, padding: 12, gap: 10 },
+  cutoffInputValue: { fontSize: 22, fontWeight: "700" as const, letterSpacing: 1 },
+  cutoffBtns: { flexDirection: "row", gap: 8 },
+  cutoffOption: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8, borderWidth: 1 },
+  cutoffOptionText: { fontSize: 12, fontWeight: "600" as const },
+  markingsGrid: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  markingToggle: { flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 10, paddingVertical: 7, borderRadius: 20, borderWidth: 1 },
+  markingToggleText: { fontSize: 12, fontWeight: "500" as const },
   autoFillRow: { flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 14, paddingVertical: 12, borderRadius: 10, borderWidth: 1 },
   autoFillText: { flex: 1, fontSize: 14, fontWeight: "600" as const, letterSpacing: 0.5 },
-  autoFillBadge: { fontSize: 10, fontWeight: "700" as const, color: "#059669", backgroundColor: "#D1FAE5", paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6, overflow: "hidden" },
+  autoFillBadge: { fontSize: 10, fontWeight: "700" as const, color: "#4ADE80", backgroundColor: "#14532D", paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6, overflow: "hidden" },
   cargoChip: { paddingHorizontal: 12, paddingVertical: 7, borderRadius: 20, borderWidth: 1 },
   cargoChipText: { fontSize: 12, fontWeight: "500" as const },
+  // POD Sheet
+  podRoot: { flex: 1 },
+  podHeader: { flexDirection: "row", alignItems: "center", padding: 20, borderBottomWidth: 1 },
+  podTitle: { fontSize: 20, fontWeight: "700" as const },
+  podSub: { fontSize: 13, marginTop: 2 },
+  podBody: { flex: 1, padding: 24, gap: 20, alignItems: "center", justifyContent: "center" },
+  cameraFrame: { width: "100%", aspectRatio: 4 / 3, borderRadius: 16, borderWidth: 2, borderStyle: "dashed", alignItems: "center", justifyContent: "center", gap: 12, position: "relative" },
+  corner: { position: "absolute", width: 20, height: 20, borderWidth: 2.5 },
+  cameraLabel: { fontSize: 13 },
+  uploadRing: { alignItems: "center", gap: 12 },
+  uploadRingCenter: { position: "absolute", top: 0, left: 0, right: 0, bottom: 60, alignItems: "center", justifyContent: "center" },
+  uploadLabel: { fontSize: 15, fontWeight: "600" as const },
+  uploadSub: { fontSize: 12 },
+  completeState: { alignItems: "center", gap: 14 },
+  completeTick: { width: 100, height: 100, borderRadius: 50, alignItems: "center", justifyContent: "center" },
+  completeTitle: { fontSize: 22, fontWeight: "700" as const },
+  completeSub: { fontSize: 14, textAlign: "center", lineHeight: 22, paddingHorizontal: 20 },
+  podActions: { width: "100%", gap: 10 },
+  captureBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, paddingVertical: 14, borderRadius: 12, borderWidth: 1 },
+  captureBtnText: { fontSize: 15, fontWeight: "600" as const },
+  uploadBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, paddingVertical: 15, borderRadius: 12 },
+  uploadBtnText: { color: "#fff", fontSize: 15, fontWeight: "700" as const },
 });

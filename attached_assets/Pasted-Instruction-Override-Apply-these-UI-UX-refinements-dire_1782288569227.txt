@@ -1,0 +1,55 @@
+Instruction Override: Apply these UI/UX refinements directly to our single-file interactive prototype to optimize mobile usability. Do not add backend infrastructure.
+
+
+
+1. REVISE THE NAV BAR TERMINOLOGY:
+
+   - Clean up the 3 bottom tabs. Change the labels and layout to: [Home] (Dashboard overview), [Job Bookings] (The unified job flow), and [Live Tracking] (The telematics map canvas).
+
+   - Ensure 'Fleet' and 'Analytics' icons/tabs are completely removed as requested.
+
+
+
+2. ENHANCE THE UNIFIED "NEW BOOKING" FORM:
+
+   - In the "New Booking" modal, when the user toggles "Air Cargo", dynamically reveal the following specialized manifest fields using a smooth transition:
+
+     * HAWB Number input field.
+
+     * Cut-off Time selector (defaulting to a high-visibility bold "1300H" style format).
+
+     * 3-column inline metric fields: [Qty], [Weight (kg)], [Dimensions (L x W x H)].
+
+     * A selectable tag group for Markings/Labels (Fragile, Hazardous, This Side Up).
+
+
+
+3. ADD THE PHOTO PROOF OF DELIVERY (POD) INTERACTION:
+
+   - Inside each expanded active Job Card under "Job Bookings", place a primary Accent Orange (#E87722) button labeled "Complete Delivery (POD)".
+
+   - Tapping this button must trigger an elegant mobile sheet overlay simulating a camera capture interface for "Photo Proof / Signatures".
+
+   - Include a functional "Upload Documentation" button inside this sheet that triggers a visual circular progress bar animation. Once finished, it updates the parent Job Status tag directly from "IN TRANSIT" to a green "DELIVERED" tag.
+
+
+
+4. INTERACTIVE MAP FIX:
+
+   - On the Live Tracking view, ensure clicking any active mock truck list-card instantly centers a stylized vector SVG map container over that specific asset marker, highlighting its "In Transit" or "At Terminal" real-time progress bar state.
+
+
+
+Instruction Override: Add a minimal, zero-package Dark/Light mode theme switch to the upper header corner of the app next to the user initials profile badge.
+
+
+
+Implementation Rules:
+
+1. Use a simple inline SVG sun/moon icon toggle button.
+
+2. Use Tailwind's class-based dark mode toggle framework (toggling a '.dark' class on the container element).
+
+3. Ensure that switching to Light Mode safely converts the deep navy (#0A1F4C) surfaces into a crisp, high-contrast light gray (#F8FAFC) or pure white canvas, while keeping the Accent Orange (#E87722) elements perfectly functional and legible.
+
+4. Keep all existing interactive features (POD modal, unified booking sheet) functional across both visual themes.
