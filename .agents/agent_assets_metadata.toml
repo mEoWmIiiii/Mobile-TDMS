@@ -1,0 +1,8 @@
+uploads = []
+outputs = []
+
+[[generated]]
+id = "nFnM-uLoVEyaqJxzeOwSl"
+uri = "file://artifacts/mobile/assets/images/icon.png"
+type = "image"
+title = "tdms logistics app icon"

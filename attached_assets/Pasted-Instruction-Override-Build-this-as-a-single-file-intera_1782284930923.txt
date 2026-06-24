@@ -1,0 +1,49 @@
+Instruction Override: Build this as a single-file interactive prototype to preserve my system compute tokens. 
+
+- Use a pure frontend architecture (HTML5, Tailwind CSS, and Vanilla JavaScript).
+- DO NOT provision databases, Node backends, Docker images, or production cloud storage.
+- Simulate all cloud storage uploads, camera capture mechanisms, hardware GPS coordinates, and telematics systems using client-side JavaScript mock state arrays and automated interval timers.
+- Render maps using a beautifully styled static SVG container or an interactive mock vector layout.
+- Build a premium geometric CSS/SVG logo into the header. 
+- Implement all animations using standard native CSS ease-in-out properties.
+
+---
+
+# Product Requirement Document (PRD)
+
+## Project Overview & Objectives
+
+### Product Name
+LogiTrack Mobile (Cross-Platform Fleet & Logistics Management App)
+
+### Target Audience
+* **Truck Drivers:** On-the-road field operators requiring high-contrast, frictionless, fast-loading interfaces for high-vibration and outdoor environments.
+* **Logistics Dispatchers / Supervisors:** Mobile-first managers monitoring systemic operational health, tracking active routes, and analyzing exceptions on the move.
+
+### The Core Problem
+The current logistics workflow relies on manual paper logging and chaotic messaging groups (e.g., Viber chats) for tracking updates. This creates critical operational blind spots, reporting delays, higher administrative overhead, and structural data fragmentations.
+
+### Executive Solution & Value Proposition
+An automated, responsive mobile ecosystem built for iOS and Android. LogiTrack converts physical touchpoints into high-scannability digital forms while replacing manual text communication with hardware-level GPS tracking and real-time UI state machinery.
+
+---
+
+## Functional Requirements & User Stories
+
+### Module A: Driver Execution & Cargo Intake (Driver Persona)
+
+#### Screen A1: Job Booking & Initialization
+* **Requirement A1.1:** The system shall display an active `Job Number` selector at the header. Tapping this selector triggers an animated container expansion revealing the exact physical destination address alongside a stylized `Warehouse/House` UI icon.
+* **Requirement A1.2:** The dashboard must feature a list of assigned booking rows. Tapping an item triggers an accordion expansion showing linked truck profiles, metrics, and real-time status without navigating away from the screen.
+
+#### Screen A2: Cargo Dispatch & Intake Form
+* **Requirement A2.1:** Provide a prominent 2-state segmented control toggle to switch validation logic between `Land Cargo` and `Flight Details`.
+* **Requirement A2.2:** The `Trucker App Number` field must auto-fill via application configuration parameters or validate automatically against current session tokens.
+* **Requirement A2.3:** The `Vehicle Plate Number` input field must feature an input mask that auto-forces character capitalization and enforces standardized alphanumeric layouts.
+
+#### Screen A3: Proof of Delivery (POD) Documentation
+* **Requirement A3.1:** Upon arrival at destination geofences, the application must prompt a native hard-stop step requiring camera access to capture physical signatures, delivery receipts, or structural cargo conditions. Documents must upload securely to peripheral cloud storage buckets.
+
+---
+
+### Module B: Air Manifest & Asset Management (Intake/Dispatcher View)

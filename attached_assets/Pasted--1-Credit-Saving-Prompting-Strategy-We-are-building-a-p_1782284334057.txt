@@ -1,0 +1,170 @@
+
+## 1. Credit-Saving Prompting Strategy
+
+> *"We are building a pure, single-page interactive HTML/CSS/JS frontend mockup for a mobile logistics application. Do not install heavy databases, Node backend servers, or external authentication. Implement everything inside a single index.html using Tailwind CSS for UI layouts, Lucide icons for iconography, and standard CSS keyframes for animations. Use mock static JSON arrays for the data. This will save my system compute tokens."*
+
+---
+
+## 2. Minimalist, Zero-Token Logo Design
+
+Instead of forcing the Agent to generate or fetch images (which often errors out and wastes credits), use a **pure CSS/SVG geometric logo**. It looks ultra-premium and modern for enterprise apps, requiring zero file assets.
+
+Have the Agent drop this snippet into the header component:
+
+```html
+<!-- Minimalist Logistics Wordmark Logo -->
+<div class="flex items-center gap-2">
+  <div class="relative w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center shadow-md animate-pulse">
+    <!-- Clean Abstract Route Arrows using SVG -->
+    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-white stroke-[2.5]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M13 5l7 7-7 7M5 5l7 7-7 7" />
+    </svg>
+  </div>
+  <span class="text-xl font-bold tracking-tight text-slate-900">Logi<span class="text-emerald-500">Track</span></span>
+</div>
+
+```
+
+---
+
+## 3. High-Performance, Low-Cost Animation Guide
+
+Instead of asking the Agent to configure complex animation frameworks (like Framer Motion or GreenSock), use native CSS transitions or simple web animations. These run perfectly on mobile screens at $60\text{ fps}$ without requiring external packages.
+
+Tell the Agent exactly how to handle the transitions:
+
+* **The Job Number Transition:** *"When tapping the Job Number card, toggle a CSS utility class (`max-h-0` to `max-h-40`) with a smooth `transition-all duration-300 ease-in-out` curve to reveal the Destination House icon."*
+* **The Chart Hero Expansion:** *"For the executive analytics dashboard, create a CSS overlay class. Clicking 'View All' should scale the card smoothly (`transform scale-100` to `fixed inset-4 z-50`) using hardware-accelerated CSS properties."*
+
+---
+
+## 4. Retaining Functionality Without Code Bloat
+
+To keep the application highly functional for your mock-up walk-through without using credits on actual tracking hardware integrations:
+
+* **Simulated GPS Telematics Banner:** Hardcode a realistic state condition directly into the state arrays.
+* **The "Anti-Viber" State Machine:** Use a basic JavaScript `setInterval` timer loop to cycle your mock data truck locations on your custom progress bar layout every few seconds. This provides an instantly functional presentation template that clearly mimics live tracking without needing a functional server backend.
+
+
+
+Yes, you can absolutely use this PRD, but **do not paste it raw as your very first message**. If you paste it exactly as it is, the Replit Agent will try to build a production-grade enterprise application. It will install heavy database packages (like PostgreSQL or Prisma), spin up backend server routing pipelines, install hardware camera libraries, and configure complex mapping dependencies. This will instantly exhaust your free tier account credits in a single turn.
+
+To get the exact visual layout and interactive logic you want without burning your credits, you need to append a **Strict Structural Boundary** directly to the top of your PRD.
+
+Copy and paste the exact text block below directly into Replit. It forces the Agent to build everything within a single file layout using mock data, which saves your credits.
+
+---
+
+### Copy & Paste This Into Replit Agent
+
+```markdown
+Instruction Override: Build this as a single-file interactive prototype to preserve my system compute tokens. 
+
+- Use a pure frontend architecture (HTML5, Tailwind CSS, and Vanilla JavaScript).
+- DO NOT provision databases, Node backends, Docker images, or production cloud storage.
+- Simulate all cloud storage uploads, camera capture mechanisms, hardware GPS coordinates, and telematics systems using client-side JavaScript mock state arrays and automated interval timers.
+- Render maps using a beautifully styled static SVG container or an interactive mock vector layout.
+- Build a premium geometric CSS/SVG logo into the header. 
+- Implement all animations using standard native CSS ease-in-out properties.
+
+---
+
+# Product Requirement Document (PRD)
+
+## Project Overview & Objectives
+
+### Product Name
+TDMS Mobile (Cross-Platform Fleet & Logistics Management App)
+
+### Target Audience
+* **Truck Drivers:** On-the-road field operators requiring high-contrast, frictionless, fast-loading interfaces for high-vibration and outdoor environments.
+* **Logistics Dispatchers / Supervisors:** Mobile-first managers monitoring systemic operational health, tracking active routes, and analyzing exceptions on the move.
+
+### The Core Problem
+The current logistics workflow relies on manual paper logging and chaotic messaging groups (e.g., Viber chats) for tracking updates. This creates critical operational blind spots, reporting delays, higher administrative overhead, and structural data fragmentations.
+
+### Executive Solution & Value Proposition
+An automated, responsive mobile ecosystem built for iOS and Android. LogiTrack converts physical touchpoints into high-scannability digital forms while replacing manual text communication with hardware-level GPS tracking and real-time UI state machinery.
+
+---
+
+## Functional Requirements & User Stories
+
+### Module A: Driver Execution & Cargo Intake (Driver Persona)
+
+#### Screen A1: Job Booking & Initialization
+* **Requirement A1.1:** The system shall display an active `Job Number` selector at the header. Tapping this selector triggers an animated container expansion revealing the exact physical destination address alongside a stylized `Warehouse/House` UI icon.
+* **Requirement A1.2:** The dashboard must feature a list of assigned booking rows. Tapping an item triggers an accordion expansion showing linked truck profiles, metrics, and real-time status without navigating away from the screen.
+
+#### Screen A2: Cargo Dispatch & Intake Form
+* **Requirement A2.1:** Provide a prominent 2-state segmented control toggle to switch validation logic between `Land Cargo` and `Flight Details`.
+* **Requirement A2.2:** The `Trucker App Number` field must auto-fill via application configuration parameters or validate automatically against current session tokens.
+* **Requirement A2.3:** The `Vehicle Plate Number` input field must feature an input mask that auto-forces character capitalization and enforces standardized alphanumeric layouts.
+
+#### Screen A3: Proof of Delivery (POD) Documentation
+* **Requirement A3.1:** Upon arrival at destination geofences, the application must prompt a native hard-stop step requiring camera access to capture physical signatures, delivery receipts, or structural cargo conditions. Documents must upload securely to peripheral cloud storage buckets.
+
+---
+
+### Module B: Air Manifest & Asset Management (Intake/Dispatcher View)
+
+
+```
+
++-------------------------------------------------------------+
+| Screen B1: MAWB Overlay Grid                                |
+|                                                             |
+| [ Shipper Details ]             [ Cut-off Time: 1300H ]     |
+| (Company, Origin)               (High-visibility Anchor)    |
+|                                                             |
+| [ HAWB Number ]                 [ Date / Time Stamps ]      |
+
+| (Nested Reference)              (System Logs) |
+| --- |
+| Inline Metrics Block: |
+| [ Qty ]                  [ Weight (kg) ]    [ Dimensions ] |
+|  |
+| Special Instructions Block: |
+| ! Markings/Labels (Fragile, Hazardous, Routing Seals) |
+| +-------------------------------------------------------------+ |
+
+```
+
+#### Screen B2: Fleet Manifest & Asset Directory
+* **Requirement B2.1:** Implement a infinite-scrolling vertical list view optimizing system rendering memory for company-owned logistics assets.
+* **Requirement B2.2:** Each list component must cleanly present the `Truck ID`, specific `Truck Type` (e.g., 10-Wheeler Wing Van, 4-Wheeler Closed Van, Refrigerator Truck), and a linked intermodal `Plane No` indicator showing the target flight connection.
+
+---
+
+### Module C: Executive Analytics Dashboard (Mobile-Optimized)
+
+#### Screen C1: High-Level Logistics KPIs
+* **Requirement C1.1:** The view must aggregate real-time metrics data into clean, glanceable UI charts illustrating daily delivery completion rates, active vehicle fleet distribution, and pending bookings.
+
+#### Screen C2: Deep-Dive Chart Expansion
+* **Requirement C2.1:** Tapping a chart element or clicking a "View All" button must invoke a full-screen hero animation. The active element transforms smoothly into an expanded analysis view featuring interactive data points, historical metric filtering tools, and advanced debug logs.
+
+---
+
+## Technical Architecture & Real-Time Telematics
+
+### Telematics Features
+* **Live Map Canvas Engine:** Embed a real-time vector map tracking ongoing asset location coordinates through hardware background GPS streams.
+* **GPS Telematics Verification Banner:** A sticky, green, persistent validation bar anchored at the top layout stating: `[✔] GPS Provider Integrated & Active`.
+* **State Automation Engine:** The application must automatically change vehicle indicators and map markers without driver intervention:
+
+| System Trigger Condition | UI State Asset Icon | Trip Progress Bar State |
+| --- | --- | --- |
+| Speed > 5 km/h outside geofence | Active Moving Truck | Incremental % progression |
+| Device inside Terminal geofence | Docked Warehouse Icon | Filled Anchor Milestone |
+| Speed = 0 km/h outside geofence for >15 mins | Pulsing Amber/Red Alert Ring | Paused/Warning Flag State |
+
+---
+
+## Design System & Interactivity Constraints
+* **Touch Targets:** Every button, checkbox, and dropdown selector must feature a minimum clickable target surface area of 48px x 48px to guarantee driver ergonomics on bumpy roads.
+* **Typography Specs:** Utilize high-contrast sans-serif typefaces (e.g., Inter, SF Pro). Apply bold or semi-bold weights exclusively onto key operational references (`Job No`, `MAWB`, `Plate No`, `1300H`) to optimize legibility under direct sunlight.
+* **Color Semantics:** Use a neutral background color paired with strict functional semantic indicators: Green for validated active integrations / On-schedule status, and Amber / Red for route delays or missing documentation parameters.
+* **Animation Bounds:** All transitions—including accordion components, dashboard chart expansions, and header mutations—must use explicit ease-in-out physics frameworks running at 60 fps to ensure high perceived system responsiveness.
+
+```
