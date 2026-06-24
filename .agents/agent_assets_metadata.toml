@@ -6,3 +6,9 @@ id = "nFnM-uLoVEyaqJxzeOwSl"
 uri = "file://artifacts/mobile/assets/images/icon.png"
 type = "image"
 title = "tdms logistics app icon"
+
+[[generated]]
+id = "nHy57Z7ijOT1Q0nJir-MG"
+uri = "file://artifacts/mobile/assets/images/splash.png"
+type = "image"
+title = "TDMS splash screen navy truck"

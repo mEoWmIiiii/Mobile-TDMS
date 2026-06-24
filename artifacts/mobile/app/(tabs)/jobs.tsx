@@ -398,7 +398,24 @@ export default function JobsScreen() {
               </View>
             </FormRow>
 
-            {/* Air Cargo dynamic fields */}
+            {/* Physical cargo metrics — always visible for both Land & Air */}
+            <FormRow label="CARGO METRICS">
+              <View style={[styles.metricsPanel, { backgroundColor: colors.secondary, borderColor: colors.border }]}>
+                <View style={styles.twoCol}>
+                  <FormRow label="QTY (PCS)" style={{ flex: 1 }}>
+                    <TextInput style={[styles.formInput, { backgroundColor: colors.card, borderColor: colors.border, color: colors.foreground }]} placeholder="0" placeholderTextColor={colors.mutedForeground} keyboardType="numeric" value={form.qty} onChangeText={(v) => setForm({ ...form, qty: v })} />
+                  </FormRow>
+                  <FormRow label="WEIGHT (KG)" style={{ flex: 1 }}>
+                    <TextInput style={[styles.formInput, { backgroundColor: colors.card, borderColor: colors.border, color: colors.foreground }]} placeholder="0.0" placeholderTextColor={colors.mutedForeground} keyboardType="numeric" value={form.weight} onChangeText={(v) => setForm({ ...form, weight: v })} />
+                  </FormRow>
+                </View>
+                <FormRow label="DIMENSIONS (L × W × H cm)" style={{ marginTop: 6 }}>
+                  <TextInput style={[styles.formInput, { backgroundColor: colors.card, borderColor: colors.border, color: colors.foreground }]} placeholder="e.g. 60×40×30" placeholderTextColor={colors.mutedForeground} value={form.dims} onChangeText={(v) => setForm({ ...form, dims: v })} />
+                </FormRow>
+              </View>
+            </FormRow>
+
+            {/* Air Cargo sub-panel — only HAWB, Cut-off, Markings */}
             <Animated.View style={{ maxHeight: airHeight, overflow: "hidden" }}>
               <View style={[styles.airBlock, { backgroundColor: colors.secondary, borderColor: colors.border }]}>
                 <View style={styles.airBlockHeader}>
@@ -419,17 +436,6 @@ export default function JobsScreen() {
                       ))}
                     </View>
                   </View>
-                </FormRow>
-                <View style={styles.twoCol}>
-                  <FormRow label="QTY (PCS)" style={{ flex: 1 }}>
-                    <TextInput style={[styles.formInput, { backgroundColor: colors.card, borderColor: colors.border, color: colors.foreground }]} placeholder="0" placeholderTextColor={colors.mutedForeground} keyboardType="numeric" value={form.qty} onChangeText={(v) => setForm({ ...form, qty: v })} />
-                  </FormRow>
-                  <FormRow label="WEIGHT (KG)" style={{ flex: 1 }}>
-                    <TextInput style={[styles.formInput, { backgroundColor: colors.card, borderColor: colors.border, color: colors.foreground }]} placeholder="0.0" placeholderTextColor={colors.mutedForeground} keyboardType="numeric" value={form.weight} onChangeText={(v) => setForm({ ...form, weight: v })} />
-                  </FormRow>
-                </View>
-                <FormRow label="DIMENSIONS (L × W × H cm)">
-                  <TextInput style={[styles.formInput, { backgroundColor: colors.card, borderColor: colors.border, color: colors.foreground }]} placeholder="e.g. 60×40×30" placeholderTextColor={colors.mutedForeground} value={form.dims} onChangeText={(v) => setForm({ ...form, dims: v })} />
                 </FormRow>
                 <FormRow label="MARKINGS / LABELS">
                   <View style={styles.markingsGrid}>
@@ -753,6 +759,7 @@ const styles = StyleSheet.create({
   autoFillBadge: { fontSize: 10, fontWeight: "700" as const, color: "#4ADE80", backgroundColor: "#14532D", paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6, overflow: "hidden" },
   cargoChip: { paddingHorizontal: 12, paddingVertical: 7, borderRadius: 20, borderWidth: 1 },
   cargoChipText: { fontSize: 12, fontWeight: "500" as const },
+  metricsPanel: { borderRadius: 12, borderWidth: 1, padding: 14, gap: 6 },
   // POD Sheet
   podRoot: { flex: 1 },
   podHeader: { flexDirection: "row", alignItems: "center", padding: 20, borderBottomWidth: 1 },

@@ -1,6 +1,5 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
-  Animated,
   Platform,
   ScrollView,
   StyleSheet,
@@ -9,16 +8,7 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import Svg, {
-  Circle,
-  Defs,
-  Line,
-  Path,
-  RadialGradient,
-  Rect,
-  Stop,
-  Text as SvgText,
-} from "react-native-svg";
+import Svg, { Circle, Line, Path, Rect, Text as SvgText } from "react-native-svg";
 
 import { GPSBanner } from "@/components/GPSBanner";
 import { Icon } from "@/components/Icon";
@@ -26,10 +16,10 @@ import { TRUCKS } from "@/data/mockData";
 import { useColors } from "@/hooks/useColors";
 
 const TRUCK_POSITIONS = [
-  { id: "TRK-001", x: 62, y: 55, status: "moving" as const, route: "Cebu → Manila" },
+  { id: "TRK-001", x: 62, y: 55, status: "moving" as const, route: "Cebu \u2192 Manila" },
   { id: "TRK-002", x: 30, y: 70, status: "alert" as const, route: "Iloilo Port" },
   { id: "TRK-003", x: 65, y: 72, status: "docked" as const, route: "Cebu Terminal" },
-  { id: "TRK-004", x: 60, y: 40, status: "moving" as const, route: "CAVITEX → Cavite" },
+  { id: "TRK-004", x: 60, y: 40, status: "moving" as const, route: "CAVITEX \u2192 Cavite" },
 ];
 
 const STATUS_COLOR = {
@@ -46,19 +36,7 @@ export default function TrackingScreen() {
   const [progresses, setProgresses] = useState<Record<string, number>>(
     Object.fromEntries(TRUCKS.map((t) => [t.id, t.progress]))
   );
-  const pulseAnim = useRef(new Animated.Value(1)).current;
   const topPad = Platform.OS === "web" ? 67 : insets.top;
-
-  useEffect(() => {
-    const anim = Animated.loop(
-      Animated.sequence([
-        Animated.timing(pulseAnim, { toValue: 1.6, duration: 900, useNativeDriver: true }),
-        Animated.timing(pulseAnim, { toValue: 1, duration: 900, useNativeDriver: true }),
-      ])
-    );
-    anim.start();
-    return () => anim.stop();
-  }, [pulseAnim]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -76,7 +54,6 @@ export default function TrackingScreen() {
   }, []);
 
   const selectedTruck = TRUCKS.find((t) => t.id === selected);
-  const selectedPos = TRUCK_POSITIONS.find((p) => p.id === selected);
 
   return (
     <View style={[styles.root, { backgroundColor: colors.background }]}>
@@ -94,23 +71,16 @@ export default function TrackingScreen() {
       <GPSBanner />
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
-        {/* SVG Map Canvas */}
+        {/* Static SVG Map Panel */}
         <View style={[styles.mapCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
           <View style={styles.mapHeader}>
-            <Text style={[styles.mapTitle, { color: colors.foreground }]}>Fleet Map — Philippines</Text>
+            <Text style={[styles.mapTitle, { color: colors.foreground }]}>Fleet Map \u2014 Philippines</Text>
             <Text style={[styles.mapSub, { color: colors.mutedForeground }]}>Real-time asset positions</Text>
           </View>
           <View style={styles.mapContainer}>
-            <Svg width="100%" height={280} viewBox="0 0 100 100">
-              <Defs>
-                <RadialGradient id="mapGrad" cx="50%" cy="50%" r="60%">
-                  <Stop offset="0%" stopColor={colors.secondary} stopOpacity="1" />
-                  <Stop offset="100%" stopColor={colors.background} stopOpacity="1" />
-                </RadialGradient>
-              </Defs>
-
+            <Svg width="100%" height={220} viewBox="0 0 100 100">
               {/* Map background */}
-              <Rect x="0" y="0" width="100" height="100" fill="url(#mapGrad)" />
+              <Rect x="0" y="0" width="100" height="100" fill={colors.secondary} />
 
               {/* Grid lines */}
               {[20, 40, 60, 80].map((v) => (
@@ -120,22 +90,22 @@ export default function TrackingScreen() {
                 </React.Fragment>
               ))}
 
-              {/* Philippines simplified landmass outline */}
+              {/* Philippines simplified landmass */}
               <Path
                 d="M55,15 L60,20 L62,28 L58,35 L60,42 L65,48 L67,55 L63,62 L60,68 L58,75 L55,80 L52,75 L50,68 L52,62 L50,55 L48,48 L50,42 L52,35 L50,28 L52,20 Z"
-                fill={colors.border + "88"}
+                fill={colors.border + "44"}
                 stroke={colors.border}
                 strokeWidth="0.5"
               />
               <Path
                 d="M35,45 L40,42 L45,48 L42,55 L38,58 L34,55 L32,48 Z"
-                fill={colors.border + "88"}
+                fill={colors.border + "44"}
                 stroke={colors.border}
                 strokeWidth="0.5"
               />
               <Path
                 d="M68,40 L73,38 L76,44 L72,50 L68,48 Z"
-                fill={colors.border + "88"}
+                fill={colors.border + "44"}
                 stroke={colors.border}
                 strokeWidth="0.5"
               />
@@ -143,13 +113,13 @@ export default function TrackingScreen() {
               {/* Route lines */}
               <Path
                 d="M62,55 L60,40"
-                stroke={colors.primary + "88"}
+                stroke={colors.primary + "66"}
                 strokeWidth="0.6"
                 strokeDasharray="2,1"
               />
               <Path
                 d="M30,70 L35,55"
-                stroke="#F59E0B88"
+                stroke="#F59E0B66"
                 strokeWidth="0.6"
                 strokeDasharray="1,1"
               />
@@ -164,14 +134,14 @@ export default function TrackingScreen() {
                       <Circle
                         cx={pos.x}
                         cy={pos.y}
-                        r="6"
-                        fill={color + "30"}
-                        stroke={color + "60"}
-                        strokeWidth="0.5"
+                        r="5"
+                        fill={color + "25"}
+                        stroke={color + "50"}
+                        strokeWidth="0.4"
                       />
                     )}
-                    <Circle cx={pos.x} cy={pos.y} r={isSelected ? 3 : 2} fill={color} />
-                    <Circle cx={pos.x} cy={pos.y} r={isSelected ? 3 : 2} fill="none" stroke="#fff" strokeWidth="0.5" />
+                    <Circle cx={pos.x} cy={pos.y} r={isSelected ? 2.5 : 2} fill={color} />
+                    <Circle cx={pos.x} cy={pos.y} r={isSelected ? 2.5 : 2} fill="none" stroke="#fff" strokeWidth="0.4" />
                     <SvgText
                       x={pos.x + 4}
                       y={pos.y - 3}
@@ -249,7 +219,7 @@ export default function TrackingScreen() {
               >
                 <View style={[styles.truckStatusDot, { backgroundColor: color }]} />
                 <View style={{ flex: 1 }}>
-                  <Text style={[styles.truckRowId, { color: colors.foreground }]}>{truck.id} · {truck.type}</Text>
+                  <Text style={[styles.truckRowId, { color: colors.foreground }]}>{truck.id} \u00b7 {truck.type}</Text>
                   <Text style={[styles.truckRowLoc, { color: colors.mutedForeground }]}>{pos.route}</Text>
                 </View>
                 <View style={styles.truckRowRight}>
@@ -269,6 +239,7 @@ export default function TrackingScreen() {
     </View>
   );
 }
+
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
