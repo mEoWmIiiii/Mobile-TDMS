@@ -1,0 +1,36 @@
+Instruction Override: Modify the current application into a high-performance, single-file interactive mobile UI prototype using pure HTML/Tailwind CSS/JS. Do not build backend servers, APIs, or database models. 
+
+Enforce the following design and structural revisions:
+1. FIX BROKEN ICONS: Completely replace all font-based iconography or external packages with raw, inline SVG elements so they render cleanly without showing 'box with x' errors on mobile screens.
+2. SYSTEM LOGO: Implement a custom geometric brand logo featuring an abstract truck icon utilizing the exact corporate palette: Primary Deep Blue (#0A1F4C) and Accent Orange (#E87722).
+3. SIMPLIFIED NAVIGATION: Remove the 'Analytics' and 'Fleet Overview' sections from the app structure. Update the bottom tab navigation bar to include exactly 3 tabs: [Jobs], [Manifest], and [Map Monitoring].
+4. UNIFIED JOB FLOW: Update the Jobs module so that when a driver initializes or books a new job, the data sheet directly captures the comprehensive layout parameters previously assigned to the separate manifest view:
+   - Shipper Details, Cut-off Time (Prominent 1300H format), Date/Time Stamps, and HAWB Number.
+   - Inline metrics blocks: Qty, Weight (kg), and Dimensions (L x W x H).
+   - Special Instructions: Markings/Labels (Fragile, Hazardous, Routing Seals).
+
+---
+
+## Technical Specifications & UI Context
+
+### Palette & Typography
+- Brand Core: Deep Blue (#0A1F4C) for primary text headers and solid backgrounds; Accent Orange (#E87722) for interactive triggers, active tabs, and highlighted emphasis tags.
+- Backgrounds: Clean, high-scannability neutral grays with stark color semantic tags (Green for integrated GPS, Amber/Red for critical exceptions).
+
+### Screen Architecture
+
+#### Screen A: Job Execution & Unified Cargo Entry 
+- Header Area: Contains the custom brand truck logo (#0A1F4C / #E87722) alongside a prominent Job Number selector. Tapping the selector toggles an animated container revealing the destination address as a crisp inline SVG House/Warehouse icon.
+- Booking Manifest Grid: Clicking an entry row triggers an accordion expansion displaying the full integrated manifest detail matrix:
+  * Shipper Profile & Cut-off Time (Forced "1300H" visualization).
+  * HAWB Number & System Timestamps.
+  * 3-column inline metrics array: [Qty] | [Weight (kg)] | [Dimensions].
+  * Distinct warning panel for special Markings/Labels (Fragile, Hazardous, etc.).
+- Form Inputs: Includes a 2-state segmented control toggle switch for [Land Cargo] vs [Flight Details], an auto-filled Trucker App Number text field, and an uppercase masked field for the Vehicle Plate Number. Minimum touch target for all fields must be 48px.
+
+#### Screen B: Asset Manifest Directory
+- Clear vertical scrollable view of company transport assets displaying Truck ID, specific Truck Type (e.g., 10-Wheeler Wing Van, 4-Wheeler Closed Van, Refrigerator Truck), and its designated connecting Plane Number reference.
+
+#### Screen C: Real-Time Map Telematics
+- Sticky top verification status bar: `[✔] GPS Provider Integrated & Active` styled in a secure green hue.
+- Visual vector canvas demonstrating dynamic asset state mutations (In Transit via a moving truck icon, At Terminal via a warehouse icon, or Delayed via a pulsing alert ring animation) running off mock JavaScript timer loops to show live interaction without server infrastructure.

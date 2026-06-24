@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from "react";
 import { Animated, StyleSheet, Text, View } from "react-native";
-import { Feather } from "@expo/vector-icons";
+import { Icon } from "@/components/Icon";
 
 export function GPSBanner() {
   const pulse = useRef(new Animated.Value(1)).current;
@@ -8,8 +8,8 @@ export function GPSBanner() {
   useEffect(() => {
     const anim = Animated.loop(
       Animated.sequence([
-        Animated.timing(pulse, { toValue: 0.5, duration: 800, useNativeDriver: true }),
-        Animated.timing(pulse, { toValue: 1, duration: 800, useNativeDriver: true }),
+        Animated.timing(pulse, { toValue: 0.35, duration: 900, useNativeDriver: true }),
+        Animated.timing(pulse, { toValue: 1, duration: 900, useNativeDriver: true }),
       ])
     );
     anim.start();
@@ -19,7 +19,7 @@ export function GPSBanner() {
   return (
     <View style={styles.banner}>
       <Animated.View style={[styles.dot, { opacity: pulse }]} />
-      <Feather name="map-pin" size={13} color="#059669" />
+      <Icon name="map-pin" size={13} color="#059669" strokeWidth={2.5} />
       <Text style={styles.text}>GPS Provider Integrated & Active</Text>
       <Text style={styles.tag}>LIVE</Text>
     </View>

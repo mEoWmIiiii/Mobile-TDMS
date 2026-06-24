@@ -3,10 +3,10 @@ import { isLiquidGlassAvailable } from "expo-glass-effect";
 import { Tabs } from "expo-router";
 import { Icon, Label, NativeTabs } from "expo-router/unstable-native-tabs";
 import { SymbolView } from "expo-symbols";
-import { Feather } from "@expo/vector-icons";
 import React from "react";
 import { Platform, StyleSheet, View, useColorScheme } from "react-native";
 
+import { Icon as SVGIcon } from "@/components/Icon";
 import { useColors } from "@/hooks/useColors";
 
 function NativeTabLayout() {
@@ -23,14 +23,6 @@ function NativeTabLayout() {
       <NativeTabs.Trigger name="manifest">
         <Icon sf={{ default: "doc.text", selected: "doc.text.fill" }} />
         <Label>Manifest</Label>
-      </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="fleet">
-        <Icon sf={{ default: "truck.box", selected: "truck.box.fill" }} />
-        <Label>Fleet</Label>
-      </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="analytics">
-        <Icon sf={{ default: "chart.bar", selected: "chart.bar.fill" }} />
-        <Label>Analytics</Label>
       </NativeTabs.Trigger>
     </NativeTabs>
   );
@@ -65,11 +57,9 @@ function ClassicTabLayout() {
               style={StyleSheet.absoluteFill}
             />
           ) : isWeb ? (
-            <View
-              style={[StyleSheet.absoluteFill, { backgroundColor: colors.card }]}
-            />
+            <View style={[StyleSheet.absoluteFill, { backgroundColor: colors.card }]} />
           ) : null,
-        tabBarLabelStyle: { fontSize: 10, fontWeight: "600" },
+        tabBarLabelStyle: { fontSize: 11, fontWeight: "600" },
       }}
     >
       <Tabs.Screen
@@ -80,7 +70,7 @@ function ClassicTabLayout() {
             isIOS ? (
               <SymbolView name="house" tintColor={color} size={22} />
             ) : (
-              <Feather name="home" size={20} color={color} />
+              <SVGIcon name="home" size={22} color={color} strokeWidth={2} />
             ),
         }}
       />
@@ -92,7 +82,7 @@ function ClassicTabLayout() {
             isIOS ? (
               <SymbolView name="briefcase" tintColor={color} size={22} />
             ) : (
-              <Feather name="briefcase" size={20} color={color} />
+              <SVGIcon name="briefcase" size={22} color={color} strokeWidth={2} />
             ),
         }}
       />
@@ -104,31 +94,7 @@ function ClassicTabLayout() {
             isIOS ? (
               <SymbolView name="doc.text" tintColor={color} size={22} />
             ) : (
-              <Feather name="file-text" size={20} color={color} />
-            ),
-        }}
-      />
-      <Tabs.Screen
-        name="fleet"
-        options={{
-          title: "Fleet",
-          tabBarIcon: ({ color }) =>
-            isIOS ? (
-              <SymbolView name="car" tintColor={color} size={22} />
-            ) : (
-              <Feather name="truck" size={20} color={color} />
-            ),
-        }}
-      />
-      <Tabs.Screen
-        name="analytics"
-        options={{
-          title: "Analytics",
-          tabBarIcon: ({ color }) =>
-            isIOS ? (
-              <SymbolView name="chart.bar" tintColor={color} size={22} />
-            ) : (
-              <Feather name="bar-chart-2" size={20} color={color} />
+              <SVGIcon name="file-text" size={22} color={color} strokeWidth={2} />
             ),
         }}
       />

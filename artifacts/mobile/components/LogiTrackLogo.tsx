@@ -1,12 +1,12 @@
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
-import { Feather } from "@expo/vector-icons";
+import { Icon } from "@/components/Icon";
 
 export function LogiTrackLogo() {
   return (
     <View style={styles.container}>
       <View style={styles.icon}>
-        <Feather name="chevrons-right" size={16} color="#FFFFFF" />
+        <Icon name="chevrons-right" size={16} color="#FFFFFF" strokeWidth={2.5} />
       </View>
       <Text style={styles.wordmark}>
         Logi<Text style={styles.accent}>Track</Text>

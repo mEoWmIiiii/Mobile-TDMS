@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from "react";
-import { Animated, StyleSheet, View } from "react-native";
-import { Feather } from "@expo/vector-icons";
+import { Animated, StyleSheet } from "react-native";
+import { Icon } from "@/components/Icon";
 
 type TruckStatus = "moving" | "docked" | "alert" | "idle";
 
@@ -40,7 +40,7 @@ export function TruckStatusIcon({ status, size = 36 }: TruckStatusIconProps) {
         status === "alert" && { opacity: pulse },
       ]}
     >
-      <Feather name={config.icon} size={size * 0.45} color={config.color} />
+      <Icon name={config.icon} size={size * 0.45} color={config.color} />
     </Animated.View>
   );
 }
