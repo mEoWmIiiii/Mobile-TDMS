@@ -38,7 +38,7 @@ export default function RootLayout() {
     Inter_700Bold,
   });
 
-  const appReady = fontsLoaded || fontError;
+  const appReady = Boolean(fontsLoaded || fontError);
 
   useEffect(() => {
     if (appReady) {

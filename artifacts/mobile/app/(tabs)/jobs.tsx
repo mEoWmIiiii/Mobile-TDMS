@@ -19,7 +19,7 @@ import * as Haptics from "expo-haptics";
 
 import { Icon } from "@/components/Icon";
 import { StatusBadge } from "@/components/StatusBadge";
-import { JOBS, Job, JobStatus, MANIFESTS } from "@/data/mockData";
+import { JOBS, Job, JobStatus, MANIFESTS, Manifest } from "@/data/mockData";
 import { useColors } from "@/hooks/useColors";
 
 const TRANSPORT_MODES = ["Land", "Air"] as const;
@@ -51,6 +51,73 @@ export default function JobsScreen() {
   const [localStatuses, setLocalStatuses] = useState<Record<string, JobStatus>>(
     Object.fromEntries(JOBS.map((j) => [j.id, j.status]))
   );
+
+  // Edit job manifest overrides (local state only)
+  const [localManifests, setLocalManifests] = useState<Record<string, Manifest>>(() => {
+    const map: Record<string, Manifest> = {};
+    JOBS.forEach((j, i) => {
+      const m = MANIFESTS[i % MANIFESTS.length];
+      map[j.id] = { ...m };
+    });
+    return map;
+  });
+
+  const getManifest = (jobId: string) => localManifests[jobId] ?? MANIFESTS[0];
+
+  // Edit modal state
+  const [editJobId, setEditJobId] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState({
+    mawb: "",
+    hawb: "",
+    qty: "",
+    weight: "",
+    dimensions: "",
+    cutoff: "1300H",
+    selectedMarkings: [] as string[],
+  });
+
+  const openEdit = (jobId: string) => {
+    const m = getManifest(jobId);
+    setEditForm({
+      mawb: m.mawb,
+      hawb: m.hawb,
+      qty: String(m.qty),
+      weight: String(m.weight),
+      dimensions: m.dimensions,
+      cutoff: m.cutoff,
+      selectedMarkings: [...m.markings],
+    });
+    setEditJobId(jobId);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+  };
+
+  const saveEdit = () => {
+    if (!editJobId) return;
+    setLocalManifests((prev) => ({
+      ...prev,
+      [editJobId]: {
+        ...prev[editJobId],
+        mawb: editForm.mawb,
+        hawb: editForm.hawb,
+        qty: Number(editForm.qty) || 0,
+        weight: Number(editForm.weight) || 0,
+        dimensions: editForm.dimensions,
+        cutoff: editForm.cutoff,
+        markings: editForm.selectedMarkings,
+      },
+    }));
+    setEditJobId(null);
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+  };
+
+  const toggleEditMarking = (m: string) => {
+    setEditForm((f) => ({
+      ...f,
+      selectedMarkings: f.selectedMarkings.includes(m)
+        ? f.selectedMarkings.filter((x) => x !== m)
+        : [...f.selectedMarkings, m],
+    }));
+  };
 
   // POD state
   const [podJobId, setPodJobId] = useState<string | null>(null);
@@ -139,8 +206,6 @@ export default function JobsScreen() {
   });
 
   const topPad = Platform.OS === "web" ? 67 : insets.top;
-  const getManifest = (jobId: string) => MANIFESTS[JOBS.findIndex((j) => j.id === jobId) % MANIFESTS.length];
-
   const airHeight = airFieldsHeight.interpolate({ inputRange: [0, 1], outputRange: [0, 320] });
 
   const strokeDash = uploadProgress.interpolate({
@@ -240,7 +305,7 @@ export default function JobsScreen() {
                   <Text style={[styles.specialTitle, { color: colors.mutedForeground }]}>MARKINGS / LABELS</Text>
                 </View>
                 <View style={styles.markingsList}>
-                  {manifest.markings.map((m) => {
+                  {manifest.markings.map((m: string) => {
                     const cfg = MARKING_COLORS[m] ?? { bg: "#F1F5F9", text: "#475569", iconName: "tag" as const };
                     return (
                       <View key={m} style={[styles.markingChip, { backgroundColor: cfg.bg }]}>
@@ -257,10 +322,18 @@ export default function JobsScreen() {
             <View style={styles.actionRow}>
               <ActionButton icon="phone" label="Call" color={colors.primary} />
               <ActionButton icon="navigation" label="Navigate" color="#60A5FA" />
+              <TouchableOpacity
+                style={[styles.editBtn, { borderColor: colors.border }]}
+                onPress={() => openEdit(job.id)}
+                activeOpacity={0.7}
+              >
+                <Icon name="edit" size={14} color={colors.mutedForeground} />
+                <Text style={[styles.editBtnText, { color: colors.mutedForeground }]}>Edit Details</Text>
+              </TouchableOpacity>
             </View>
 
             {/* POD button — only for active jobs */}
-            {isActive && status !== "DELIVERED" && (
+            {isActive && (
               <TouchableOpacity
                 style={[styles.podBtn, { backgroundColor: colors.primary }]}
                 onPress={() => openPOD(job.id)}
@@ -616,6 +689,90 @@ export default function JobsScreen() {
           </View>
         </View>
       </Modal>
+
+      {/* ── Edit Shipment Info Modal ── */}
+      <Modal visible={editJobId !== null} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setEditJobId(null)}>
+        <View style={[styles.modalRoot, { backgroundColor: colors.background }]}>
+          <View style={[styles.modalHeader, { borderBottomColor: colors.border }]}>
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.modalTitle, { color: colors.foreground }]}>Edit Shipment Info</Text>
+              <Text style={[styles.modalSub, { color: colors.mutedForeground }]}>{editJobId}</Text>
+            </View>
+            <TouchableOpacity onPress={() => setEditJobId(null)}>
+              <Icon name="x" size={22} color={colors.foreground} />
+            </TouchableOpacity>
+          </View>
+
+          <ScrollView style={styles.modalScroll} contentContainerStyle={{ padding: 16, gap: 14, paddingBottom: 100 }} keyboardShouldPersistTaps="handled">
+            <FormRow label="MAWB NUMBER">
+              <TextInput style={[styles.formInput, { backgroundColor: colors.card, borderColor: colors.border, color: colors.foreground }]} placeholder="e.g. MNL-2024-0456" placeholderTextColor={colors.mutedForeground} value={editForm.mawb} onChangeText={(v) => setEditForm({ ...editForm, mawb: v })} />
+            </FormRow>
+            <FormRow label="HAWB NUMBER">
+              <TextInput style={[styles.formInput, { backgroundColor: colors.card, borderColor: colors.border, color: colors.foreground }]} placeholder="e.g. HAWB-0789" placeholderTextColor={colors.mutedForeground} value={editForm.hawb} onChangeText={(v) => setEditForm({ ...editForm, hawb: v })} />
+            </FormRow>
+
+            <FormRow label="CUT-OFF TIME">
+              <View style={[styles.cutoffInputRow, { backgroundColor: colors.card, borderColor: colors.border }]}>
+                <Text style={[styles.cutoffInputValue, { color: "#B91C1C" }]}>{editForm.cutoff}</Text>
+                <View style={styles.cutoffBtns}>
+                  {["1100H", "1300H", "1500H", "1700H"].map((t) => (
+                    <TouchableOpacity key={t} style={[styles.cutoffOption, editForm.cutoff === t && { backgroundColor: "#FEF2F2", borderColor: "#F87171" }, { borderColor: colors.border }]} onPress={() => setEditForm({ ...editForm, cutoff: t })}>
+                      <Text style={[styles.cutoffOptionText, { color: editForm.cutoff === t ? "#B91C1C" : colors.mutedForeground }]}>{t}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+            </FormRow>
+
+            <FormRow label="CARGO METRICS">
+              <View style={[styles.metricsPanel, { backgroundColor: colors.secondary, borderColor: colors.border }]}>
+                <View style={styles.twoCol}>
+                  <FormRow label="QTY (PCS)" style={{ flex: 1 }}>
+                    <TextInput style={[styles.formInput, { backgroundColor: colors.card, borderColor: colors.border, color: colors.foreground }]} placeholder="0" placeholderTextColor={colors.mutedForeground} keyboardType="numeric" value={editForm.qty} onChangeText={(v) => setEditForm({ ...editForm, qty: v })} />
+                  </FormRow>
+                  <FormRow label="WEIGHT (KG)" style={{ flex: 1 }}>
+                    <TextInput style={[styles.formInput, { backgroundColor: colors.card, borderColor: colors.border, color: colors.foreground }]} placeholder="0.0" placeholderTextColor={colors.mutedForeground} keyboardType="numeric" value={editForm.weight} onChangeText={(v) => setEditForm({ ...editForm, weight: v })} />
+                  </FormRow>
+                </View>
+                <FormRow label="DIMENSIONS (L × W × H cm)" style={{ marginTop: 6 }}>
+                  <TextInput style={[styles.formInput, { backgroundColor: colors.card, borderColor: colors.border, color: colors.foreground }]} placeholder="e.g. 60×40×30" placeholderTextColor={colors.mutedForeground} value={editForm.dimensions} onChangeText={(v) => setEditForm({ ...editForm, dimensions: v })} />
+                </FormRow>
+              </View>
+            </FormRow>
+
+            <FormRow label="MARKINGS / LABELS">
+              <View style={styles.markingsGrid}>
+                {MARKINGS_OPTIONS.map((m) => {
+                  const selected = editForm.selectedMarkings.includes(m);
+                  const cfg = MARKING_COLORS[m] ?? { bg: "#F1F5F9", text: "#475569", iconName: "tag" as const };
+                  return (
+                    <TouchableOpacity
+                      key={m}
+                      style={[styles.markingToggle, { backgroundColor: selected ? cfg.bg : colors.card, borderColor: selected ? cfg.text + "60" : colors.border }]}
+                      onPress={() => toggleEditMarking(m)}
+                    >
+                      <Icon name={cfg.iconName} size={12} color={selected ? cfg.text : colors.mutedForeground} />
+                      <Text style={[styles.markingToggleText, { color: selected ? cfg.text : colors.mutedForeground }]}>{m}</Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            </FormRow>
+          </ScrollView>
+
+          <View style={[styles.modalFooter, { borderTopColor: colors.border }]}>
+            <TouchableOpacity style={[styles.cancelBtn, { borderColor: colors.border }]} onPress={() => setEditJobId(null)}>
+              <Text style={[styles.cancelText, { color: colors.foreground }]}>Cancel</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.submitBtn, { backgroundColor: "#E87722" }]}
+              onPress={saveEdit}
+            >
+              <Text style={styles.submitText}>Save Changes</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -720,6 +877,8 @@ const styles = StyleSheet.create({
   actionRow: { flexDirection: "row", gap: 8 },
   actionBtn: { flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, paddingVertical: 11, borderRadius: 10, borderWidth: 1 },
   actionBtnText: { fontSize: 13, fontWeight: "600" as const },
+  editBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, paddingVertical: 11, paddingHorizontal: 12, borderRadius: 10, borderWidth: 1 },
+  editBtnText: { fontSize: 13, fontWeight: "600" as const },
   podBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, paddingVertical: 14, borderRadius: 12 },
   podBtnText: { color: "#fff", fontSize: 15, fontWeight: "700" as const },
   deliveredBadge: { flexDirection: "row", alignItems: "center", gap: 8, padding: 12, borderRadius: 10, borderWidth: 1 },

@@ -39,7 +39,12 @@ type IconName =
   | "info"
   | "check"
   | "layers"
-  | "clock";
+  | "clock"
+  | "edit"
+  | "chevron-right"
+  | "sun"
+  | "moon"
+  | "upload-cloud";
 
 interface IconProps {
   name: IconName;
@@ -375,6 +380,13 @@ export function Icon({ name, size = 20, color = "#000", strokeWidth = 2 }: IconP
           <Polyline points="16 16 12 12 8 16" />
           <Line x1="12" y1="12" x2="12" y2="21" />
           <Path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3" />
+        </Svg>
+      );
+    case "edit":
+      return (
+        <Svg {...props}>
+          <Path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+          <Path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
         </Svg>
       );
     default:

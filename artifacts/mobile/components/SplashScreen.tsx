@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Image, Platform, StyleSheet, Text, View } from "react-native";
 
 interface Props {
@@ -7,50 +7,49 @@ interface Props {
 }
 
 export default function AnimatedSplashScreen({ onFinish, isReady }: Props) {
-  const doneRef = useRef(false);
+  const [opacity, setOpacity] = useState(1);
   const onFinishRef = useRef(onFinish);
   onFinishRef.current = onFinish;
+  const startedRef = useRef(false);
 
   useEffect(() => {
-    if (!isReady || doneRef.current) return;
-    doneRef.current = true;
+    if (!isReady || startedRef.current) return;
+    startedRef.current = true;
 
-    const fadeOut = () => {
-      const start = Date.now();
-      const duration = 900;
-      let raf: number;
+    let interval: ReturnType<typeof setInterval> | null = null;
+    const delay = setTimeout(() => {
+      interval = setInterval(() => {
+        setOpacity((prev) => {
+          const next = Math.max(0, prev - 0.03);
+          if (next <= 0) {
+            if (interval) clearInterval(interval);
+            setTimeout(() => onFinishRef.current(), 80);
+          }
+          return next;
+        });
+      }, 16);
+    }, 500);
 
-      const tick = () => {
-        const elapsed = Date.now() - start;
-        const next = Math.max(0, 1 - elapsed / duration);
-        if (next > 0) {
-          raf = requestAnimationFrame(tick);
-        } else {
-          setTimeout(() => onFinishRef.current(), 100);
-        }
-      };
-
-      raf = requestAnimationFrame(tick);
+    return () => {
+      clearTimeout(delay);
+      if (interval) clearInterval(interval);
     };
-
-    const t = setTimeout(fadeOut, 500);
-    return () => clearTimeout(t);
   }, [isReady]);
 
   return (
     <View
       style={[
         styles.root,
-        Platform.OS === "web" &&
-          ({
-            position: "fixed" as any,
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            height: "100vh" as any,
-            width: "100vw" as any,
-          } as any),
+        Platform.OS === "web" && {
+          position: "fixed" as any,
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          height: "100vh" as any,
+          width: "100vw" as any,
+        } as any,
+        { opacity },
       ]}
     >
       <View style={styles.container}>
@@ -61,7 +60,7 @@ export default function AnimatedSplashScreen({ onFinish, isReady }: Props) {
             resizeMode="contain"
           />
         </View>
-        <Text style={styles.tagline}></Text>
+        <Text style={styles.tagline}>Fleet & Logistics</Text>
       </View>
     </View>
   );
