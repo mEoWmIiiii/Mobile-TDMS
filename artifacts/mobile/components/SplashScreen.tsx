@@ -41,15 +41,16 @@ export default function AnimatedSplashScreen({ onFinish, isReady }: Props) {
     <View
       style={[
         styles.root,
-        Platform.OS === "web" && {
-          position: "fixed" as any,
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          height: "100vh" as any,
-          width: "100vw" as any,
-        } as any,
+        Platform.OS === "web" &&
+          ({
+            position: "fixed" as any,
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            height: "100vh" as any,
+            width: "100vw" as any,
+          } as any),
       ]}
     >
       <View style={styles.container}>
@@ -60,7 +61,7 @@ export default function AnimatedSplashScreen({ onFinish, isReady }: Props) {
             resizeMode="contain"
           />
         </View>
-        <Text style={styles.tagline}>Fleet & Logistics</Text>
+        <Text style={styles.tagline}></Text>
       </View>
     </View>
   );
