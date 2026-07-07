@@ -41,12 +41,13 @@ Make sure you have [Node.js](https://nodejs.org/) installed on your computer.
 ```bash
 git clone [https://github.com/mEoWmIiiii/Mobile-TDMS.git](https://github.com/mEoWmIiiii/Mobile-TDMS.git)
 cd Mobile-TDMS
+
 2. Install Project Dependencies
 Because the heavy dependency folders are excluded (.gitignore), you must restore them locally before running the app:
 
-Bash
+```bash
 npm install
 3. Run the Development Server
-Bash
+```bash
 npm run dev
 Open the local URL provided in your terminal (usually http://localhost:5173) in your browser to view the application.
