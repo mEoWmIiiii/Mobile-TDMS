@@ -1,6 +1,6 @@
 # Mobile TDMS (Transport & Logistics Dashboard)
 
-Mobile TDMS is a lightweight web application made for managing logistics across different platforms. It helps field operators and warehouse staff to easily track, enter, and organize cargo information for both land and air transport.
+Mobile TDMS is a lightweight mobile application made for managing logistics across different platforms. It helps field operators and warehouse staff to easily track, enter, and organize cargo information for both land and air transport.
 
 ### Key Features
 
