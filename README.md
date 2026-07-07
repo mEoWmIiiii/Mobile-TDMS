@@ -1,9 +1,3 @@
-Congrats! 🎉 Doing it cloud-to-cloud via Replit is a huge win—clean, fast, and completely safe for your work laptop.
-
-Here is a professional, clean, and easy-to-read `README.md` tailored specifically for your **Mobile-TDMS** project. It outlines how to set it up, what it does, and includes placeholders for those dashboard screenshots you managed earlier.
-
----
-
 ### How to use this:
 
 1. Go to your **Mobile-TDMS** repository on GitHub.
