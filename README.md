@@ -2,7 +2,7 @@
 
 A lightweight, mobile-first web application designed for cross-platform logistics management. Mobile TDMS provides field operators and warehouse staff with a high-visibility, responsive interface to track, input, and align cargo entries across Land and Air transit routes.
 
-## 🚀 Features
+### Features
 
 * **Mobile-First Responsive Layout:** A clean three-column layout (Quantity, Weight, Dimensions) optimized for rapid data entry on tablets and mobile devices.
 * **Unified Logistics Tracking:** Seamlessly view, filter, and manage land and air cargo entries on a unified interface.
@@ -10,18 +10,18 @@ A lightweight, mobile-first web application designed for cross-platform logistic
 
 ---
 
-## 📸 Interface Preview
+### Interface Preview
 
 To accommodate varying field conditions—ranging from high-glare outdoor shipping docks to low-light warehouses—the platform offers an instant adaptive interface toggle.
 
-| 🌙 Dark Mode Dashboard | ☀️ Light Mode Dashboard |
+| Dark Mode Dashboard | Light Mode Dashboard |
 | :---: | :---: |
 | <img width="159" height="322" alt="tdms dark mode" src="https://github.com/user-attachments/assets/94b89a4b-1216-4908-9d52-ca0794795f21" /> | <img width="167" height="323" alt="tdms light mode" src="https://github.com/user-attachments/assets/619dc542-0ae3-41cc-826a-f04876838a95" /> |
 | *Optimized for low-light warehouse conditions and reducing eye strain.* | *Optimized for high-visibility under direct sunlight at outdoor cargo ports.* |
 
 ---
 
-## 🛠️ Tech Stack & Design System
+### Tech Stack & Design System
 
 * **Framework:** React / Vite (HTML5, Custom CSS Modules)
 * **Design Philosophy:** Atomic Visual Component Design
@@ -30,7 +30,7 @@ To accommodate varying field conditions—ranging from high-glare outdoor shippi
 
 ---
 
-## 📦 Local Setup Instructions
+### Local Setup Instructions
 
 If you want to run or test this project locally on your machine, follow these steps:
 
