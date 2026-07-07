@@ -1,9 +1,9 @@
 ```markdown
-# Mobile TDMS (Transport & Logistics Dashboard)
+Mobile TDMS (Transport & Logistics Dashboard)
 
 A lightweight, mobile-first web application designed for cross-platform logistics management. Mobile TDMS provides field operators and warehouse staff with a high-visibility, responsive interface to track, input, and align cargo entries across Land and Air transit routes.
 
-## 🚀 Features
+Features
 
 * **Mobile-First Responsive Layout:** A clean three-column layout (Quantity, Weight, Dimensions) optimized for rapid data entry on tablets and mobile devices.
 * **Unified Logistics Tracking:** Seamlessly view, filter, and manage land and air cargo entries on a unified interface.
@@ -11,19 +11,19 @@ A lightweight, mobile-first web application designed for cross-platform logistic
 
 ---
 
-## 📸 Interface Preview
+Interface Preview
 
 ### Dark Mode Dashboard
 *Optimized for low-light warehouse conditions and reducing eye strain.*
-![Dark Mode Dashboard](tdms dark mode)
+![Dark Mode Dashboard](tdms dark mode.png)
 
 ### Light Mode Dashboard
 *Optimized for high-visibility under direct sunlight at outdoor cargo ports.*
-![Light Mode Dashboard](tdms light mode)
+![Light Mode Dashboard](tdms light mode.png)
 
 ---
 
-## 🛠️ Tech Stack & Design System
+Tech Stack & Design System
 
 * **Framework:** React / Vite (HTML5, Custom CSS Modules)
 * **Design Philosophy:** Atomic Visual Component Design
@@ -33,7 +33,7 @@ A lightweight, mobile-first web application designed for cross-platform logistic
 
 ---
 
-## 📦 Local Setup Instructions
+Local Setup Instructions
 
 If you want to run or test this project locally on your machine, follow these steps:
 
