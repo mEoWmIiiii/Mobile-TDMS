@@ -16,9 +16,8 @@ The app provides an interface that adapts to different lighting conditions, with
 
 | Dark Mode Dashboard | Light Mode Dashboard |
 | :---: | :---: |
-| <img width="159" height="322" alt="tdms dark mode" src="https://github.com/user-attachments/assets/7fef1c5e-b8cc-439e-a94e-863892bfee2d" />
-| <img width="167" height="323" alt="tdms light mode" src="https://github.com/user-attachments/assets/ea6512b6-ac46-4461-8323-81e3725c998d" /> |
-
+| <img width="159" height="322" alt="tdms dark mode" src="https://github.com/user-attachments/assets/7fef1c5e-b8cc-439e-a94e-863892bfee2d" /> | <img width="167" height="323" alt="tdms light mode" src="https://github.com/user-attachments/assets/ea6512b6-ac46-4461-8323-81e3725c998d" /> |
+| *Optimized for low-light warehouse conditions and reducing eye strain.* | *Optimized for high-visibility under direct sunlight at outdoor cargo ports.* |
 
 
 
