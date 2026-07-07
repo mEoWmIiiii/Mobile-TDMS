@@ -4,9 +4,9 @@ Mobile TDMS is a lightweight mobile application made for managing logistics acro
 
 ### Key Features
 
-**Mobile-Friendly Design:** The app uses a clean three-column layout (Quantity, Weight, Dimensions) that is easy to use on tablets and smartphones.
-**Combined Tracking:** Users can view, filter, and manage cargo entries for land and air transport in one place.
-**Easy Theme Switch:** Users can quickly switch between Light and Dark modes for better visibility. This is helpful in bright outdoor settings or dim warehouses.
+* **Mobile-Friendly Design:** The app uses a clean three-column layout (Quantity, Weight, Dimensions) that is easy to use on tablets and smartphones.
+* **Combined Tracking:** Users can view, filter, and manage cargo entries for land and air transport in one place.
+* **Easy Theme Switch:** Users can quickly switch between Light and Dark modes for better visibility. This is helpful in bright outdoor settings or dim warehouses.
 
 ---
 
@@ -22,9 +22,9 @@ The app provides an interface that adapts to different lighting conditions, with
 ---
 
 ### Tech Stack & Design System
-**Framework:** React / Vite (HTML5, Custom CSS Modules)
-**Design Approach:** Simple Visual Component Design
-**Primary Theme Colors:** 
+* **Framework:** React / Vite (HTML5, Custom CSS Modules)
+* **Design Approach:** Simple Visual Component Design
+* **Primary Theme Colors:** 
 * Deep Corporate Navy (`#0A1F4C`) — Used for headers, navigation, and main elements.
 * Vibrant Logistics Orange (`#E87722`) — Used for call-to-action buttons and important status alerts.
 
