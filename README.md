@@ -53,4 +53,3 @@ npm install
 ```bash
 npm run dev
 ```
-Open the local URL provided in your terminal (usually http://localhost:5173) in your browser to view the application.
