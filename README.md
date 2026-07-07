@@ -15,11 +15,11 @@ A lightweight, mobile-first web application designed for cross-platform logistic
 
 ### Dark Mode Dashboard
 *Optimized for low-light warehouse conditions and reducing eye strain.*
-![Dark Mode Dashboard](image_a69363.png)
+![Dark Mode Dashboard](tdms dark mode)
 
 ### Light Mode Dashboard
 *Optimized for high-visibility under direct sunlight at outdoor cargo ports.*
-![Light Mode Dashboard](image_a6937e.png)
+![Light Mode Dashboard](tdms light mode)
 
 ---
 
