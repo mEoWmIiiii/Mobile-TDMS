@@ -1,10 +1,3 @@
-### How to use this:
-
-1. Go to your **Mobile-TDMS** repository on GitHub.
-2. Click **Add file** -> **Create new file**.
-3. Name the file exactly **`README.md`**.
-4. Copy and paste the raw markdown block below into the file, then commit it!
-
 ```markdown
 # Mobile TDMS (Transport & Logistics Dashboard)
 
