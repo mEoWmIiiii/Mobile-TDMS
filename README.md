@@ -24,8 +24,9 @@ The app provides an interface that adapts to different lighting conditions, with
 ### Tech Stack & Design System
 **Framework:** React / Vite (HTML5, Custom CSS Modules)
 **Design Approach:** Simple Visual Component Design
-**Primary Theme Colors:** * Deep Corporate Navy (`#0A1F4C`) — Used for headers, navigation, and main elements.
-  * Vibrant Logistics Orange (`#E87722`) — Used for call-to-action buttons and important status alerts.
+**Primary Theme Colors:** 
+* Deep Corporate Navy (`#0A1F4C`) — Used for headers, navigation, and main elements.
+* Vibrant Logistics Orange (`#E87722`) — Used for call-to-action buttons and important status alerts.
 
 ---
 
