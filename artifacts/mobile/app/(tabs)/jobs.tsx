@@ -653,6 +653,24 @@ export default function JobsScreen() {
                 {job.origin} → {job.destination}
               </Text>
             </View>
+            {job.mode === "Air" && (
+              <View style={styles.airProgressBlock}>
+                <Text style={[styles.airHawbText, { color: colors.mutedForeground }]}>HAWB {manifest.hawb}</Text>
+                <View style={styles.milestoneDots}>
+                  {PHASE_LABELS.map((label, idx) => {
+                    const completed = idx < phase;
+                    const isLast = idx === PHASE_LABELS.length - 1;
+                    return (
+                      <React.Fragment key={label}>
+                        <View style={[styles.milestoneDot, { backgroundColor: completed ? "#E87722" : "#E2E8F0" }]} />
+                        {!isLast && <View style={[styles.milestoneConnector, { backgroundColor: idx < phase ? "#E87722" : "#E2E8F0" }]} />}
+                      </React.Fragment>
+                    );
+                  })}
+                </View>
+                <Text style={[styles.milestoneNext, { color: colors.primary }]}>{nextLabel}</Text>
+              </View>
+            )}
           </View>
           <View style={styles.jobHeaderRight}>
             <StatusBadge status={status} />
@@ -768,22 +786,6 @@ export default function JobsScreen() {
                     Auto-stamped
                   </Text>
                 </View>
-              </View>
-              <View style={[styles.milestoneRow, { borderColor: colors.border }]}>
-                <Text style={[styles.milestoneLabel, { color: colors.mutedForeground }]}>Operational progress</Text>
-                <View style={styles.milestoneDots}>
-                  {PHASE_LABELS.map((label, idx) => {
-                    const completed = idx < phase;
-                    const isLast = idx === PHASE_LABELS.length - 1;
-                    return (
-                      <React.Fragment key={label}>
-                        <View style={[styles.milestoneDot, { backgroundColor: completed ? "#E87722" : "#E2E8F0" }]} />
-                        {!isLast && <View style={[styles.milestoneConnector, { backgroundColor: idx < phase ? "#E87722" : "#E2E8F0" }]} />}
-                      </React.Fragment>
-                    );
-                  })}
-                </View>
-                <Text style={[styles.milestoneNext, { color: colors.primary }]}>{nextLabel}</Text>
               </View>
               <View style={[styles.metricsRow, { borderColor: colors.border }]}>
                 <MetricBlock
@@ -2207,9 +2209,9 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   uploadBtnText: { color: "#fff", fontSize: 15, fontWeight: "700" as const },
-  // Progress milestones
-  milestoneRow: { padding: 12, borderTopWidth: 1 },
-  milestoneLabel: { fontSize: 10, fontWeight: "600" as const, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 8 },
+  // Air-only progress milestones in collapsed job card
+  airProgressBlock: { marginTop: 8 },
+  airHawbText: { fontSize: 11, fontWeight: "600" as const, marginBottom: 6 },
   milestoneDots: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   milestoneDot: { width: 8, height: 8, borderRadius: 4 },
   milestoneConnector: { flex: 1, height: 2, marginHorizontal: 6 },

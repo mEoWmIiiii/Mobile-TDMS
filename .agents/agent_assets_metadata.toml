@@ -29,3 +29,9 @@ id = "0hBFnUsVvnD_wARd7okDE"
 uri = "file://screenshots/verify/jobs-final.jpg"
 type = "image"
 title = "TDMS Mobile — Job Bookings"
+
+[[outputs]]
+id = "5TNNdPN0QmUNnN_XcdCZ9"
+uri = "file://screenshots/verify/jobs-air-milestone.jpg"
+type = "image"
+title = "TDMS Mobile — Job Bookings with Air-only milestone"
