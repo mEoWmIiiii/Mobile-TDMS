@@ -35,6 +35,28 @@ const MARKING_COLORS: Record<string, { bg: string; text: string; iconName: "shie
   "ROUTING SEAL": { bg: "#F5F3FF", text: "#6D28D9", iconName: "tag" },
 };
 
+type QtyUnit = "ctn" | "plt";
+
+interface Dim {
+  length: string;
+  width: string;
+  height: string;
+}
+
+const parseDim = (raw: string): Dim[] => {
+  const parts = raw.split(/[,;]/).map((s) => s.trim()).filter(Boolean);
+  return parts.map((p) => {
+    const m = p.match(/(\d+(?:\.\d+)?)\s*[×xX]\s*(\d+(?:\.\d+)?)\s*[×xX]\s*(\d+(?:\.\d+)?)/);
+    return m ? { length: m[1], width: m[2], height: m[3] } : { length: "", width: "", height: "" };
+  });
+};
+
+const formatDim = (dims: Dim[]) =>
+  dims
+    .filter((d) => d.length || d.width || d.height)
+    .map((d) => `${d.length || "0"}×${d.width || "0"}×${d.height || "0"} cm`)
+    .join(", ") || "";
+
 type PodPhase = "idle" | "capture" | "uploading" | "complete";
 
 const CIRC = 2 * Math.PI * 26; // circumference for r=26
@@ -53,11 +75,11 @@ export default function JobsScreen() {
   );
 
   // Edit job manifest overrides (local state only)
-  const [localManifests, setLocalManifests] = useState<Record<string, Manifest>>(() => {
-    const map: Record<string, Manifest> = {};
+  const [localManifests, setLocalManifests] = useState<Record<string, Manifest & { qtyUnit?: QtyUnit }>>(() => {
+    const map: Record<string, Manifest & { qtyUnit?: QtyUnit }> = {};
     JOBS.forEach((j, i) => {
       const m = MANIFESTS[i % MANIFESTS.length];
-      map[j.id] = { ...m };
+      map[j.id] = { ...m, qtyUnit: "ctn" };
     });
     return map;
   });
@@ -70,22 +92,25 @@ export default function JobsScreen() {
     mawb: "",
     hawb: "",
     qty: "",
+    qtyUnit: "ctn" as QtyUnit,
     weight: "",
-    dimensions: "",
+    dims: [{ length: "", width: "", height: "" }] as Dim[],
+    customMarkings: "",
     cutoff: "1300H",
-    selectedMarkings: [] as string[],
   });
 
   const openEdit = (jobId: string) => {
     const m = getManifest(jobId);
+    const parsedDims = parseDim(m.dimensions);
     setEditForm({
       mawb: m.mawb,
       hawb: m.hawb,
       qty: String(m.qty),
+      qtyUnit: (m.qtyUnit as QtyUnit) ?? "ctn",
       weight: String(m.weight),
-      dimensions: m.dimensions,
+      dims: parsedDims.length ? parsedDims : [{ length: "", width: "", height: "" }],
+      customMarkings: m.markings.join(", "),
       cutoff: m.cutoff,
-      selectedMarkings: [...m.markings],
     });
     setEditJobId(jobId);
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -93,6 +118,10 @@ export default function JobsScreen() {
 
   const saveEdit = () => {
     if (!editJobId) return;
+    const allMarkings = editForm.customMarkings
+      .split(/[,;\n]/)
+      .map((s) => s.trim())
+      .filter(Boolean);
     setLocalManifests((prev) => ({
       ...prev,
       [editJobId]: {
@@ -100,10 +129,11 @@ export default function JobsScreen() {
         mawb: editForm.mawb,
         hawb: editForm.hawb,
         qty: Number(editForm.qty) || 0,
+        qtyUnit: editForm.qtyUnit,
         weight: Number(editForm.weight) || 0,
-        dimensions: editForm.dimensions,
+        dimensions: formatDim(editForm.dims),
         cutoff: editForm.cutoff,
-        markings: editForm.selectedMarkings,
+        markings: allMarkings,
       },
     }));
     setEditJobId(null);
@@ -111,12 +141,11 @@ export default function JobsScreen() {
   };
 
   const toggleEditMarking = (m: string) => {
-    setEditForm((f) => ({
-      ...f,
-      selectedMarkings: f.selectedMarkings.includes(m)
-        ? f.selectedMarkings.filter((x) => x !== m)
-        : [...f.selectedMarkings, m],
-    }));
+    setEditForm((f) => {
+      const current = f.customMarkings.split(/[,;\n]/).map((s) => s.trim()).filter(Boolean);
+      const next = current.includes(m) ? current.filter((x) => x !== m) : [...current, m];
+      return { ...f, customMarkings: next.join(", ") };
+    });
   };
 
   // POD state
@@ -128,7 +157,8 @@ export default function JobsScreen() {
   // New booking form
   const [form, setForm] = useState({
     customer: "", contact: "", origin: "", destination: "",
-    weight: "", qty: "", dims: "",
+    weight: "", qty: "", qtyUnit: "ctn" as QtyUnit,
+    dims: [{ length: "", width: "", height: "" }] as Dim[],
     mode: "Land" as "Land" | "Air",
     cargoType: "", remarks: "",
     hawb: "", cutoff: "1300H",
@@ -166,6 +196,60 @@ export default function JobsScreen() {
         ? f.selectedMarkings.filter((x) => x !== m)
         : [...f.selectedMarkings, m],
     }));
+  };
+
+  const setFormDim = (idx: number, key: keyof Dim, value: string) => {
+    setForm((f) => ({ ...f, dims: f.dims.map((d, i) => (i === idx ? { ...d, [key]: value } : d)) }));
+  };
+
+  const setFormQty = (qty: string) => {
+    const n = Math.max(1, Math.min(20, Number(qty) || 0));
+    setForm((f) => {
+      const rows = f.qtyUnit === "plt" ? 1 : Math.max(1, n);
+      return {
+        ...f,
+        qty,
+        dims: Array.from({ length: rows }, (_, i) => f.dims[i] || { length: "", width: "", height: "" }),
+      };
+    });
+  };
+
+  const setFormQtyUnit = (unit: QtyUnit) => {
+    setForm((f) => {
+      const rows = unit === "plt" ? 1 : Math.max(1, Math.min(20, Number(f.qty) || 1));
+      return {
+        ...f,
+        qtyUnit: unit,
+        dims: Array.from({ length: rows }, (_, i) => f.dims[i] || { length: "", width: "", height: "" }),
+      };
+    });
+  };
+
+  const setEditDim = (idx: number, key: keyof Dim, value: string) => {
+    setEditForm((f) => ({ ...f, dims: f.dims.map((d, i) => (i === idx ? { ...d, [key]: value } : d)) }));
+  };
+
+  const setEditQty = (qty: string) => {
+    const n = Math.max(1, Math.min(20, Number(qty) || 0));
+    setEditForm((f) => {
+      const rows = f.qtyUnit === "plt" ? 1 : Math.max(1, n);
+      return {
+        ...f,
+        qty,
+        dims: Array.from({ length: rows }, (_, i) => f.dims[i] || { length: "", width: "", height: "" }),
+      };
+    });
+  };
+
+  const setEditQtyUnit = (unit: QtyUnit) => {
+    setEditForm((f) => {
+      const rows = unit === "plt" ? 1 : Math.max(1, Math.min(20, Number(f.qty) || 1));
+      return {
+        ...f,
+        qtyUnit: unit,
+        dims: Array.from({ length: rows }, (_, i) => f.dims[i] || { length: "", width: "", height: "" }),
+      };
+    });
   };
 
   const openPOD = (jobId: string) => {
@@ -293,7 +377,7 @@ export default function JobsScreen() {
                 </View>
               </View>
               <View style={[styles.metricsRow, { borderColor: colors.border }]}>
-                <MetricBlock label="QTY" value={`${manifest.qty} pcs`} color="#3B82F6" />
+                <MetricBlock label="QTY" value={`${manifest.qty} ${manifest.qtyUnit ?? "ctn"}`} color="#3B82F6" />
                 <View style={[styles.metricDivider, { backgroundColor: colors.border }]} />
                 <MetricBlock label="WEIGHT (KG)" value={`${manifest.weight} kg`} color="#8B5CF6" />
                 <View style={[styles.metricDivider, { backgroundColor: colors.border }]} />
@@ -475,15 +559,37 @@ export default function JobsScreen() {
             <FormRow label="CARGO METRICS">
               <View style={[styles.metricsPanel, { backgroundColor: colors.secondary, borderColor: colors.border }]}>
                 <View style={styles.twoCol}>
-                  <FormRow label="QTY (PCS)" style={{ flex: 1 }}>
-                    <TextInput style={[styles.formInput, { backgroundColor: colors.card, borderColor: colors.border, color: colors.foreground }]} placeholder="0" placeholderTextColor={colors.mutedForeground} keyboardType="numeric" value={form.qty} onChangeText={(v) => setForm({ ...form, qty: v })} />
+                  <FormRow label="QTY" style={{ flex: 1 }}>
+                    <TextInput style={[styles.formInput, { backgroundColor: colors.card, borderColor: colors.border, color: colors.foreground }]} placeholder="0" placeholderTextColor={colors.mutedForeground} keyboardType="numeric" value={form.qty} onChangeText={setFormQty} />
                   </FormRow>
-                  <FormRow label="WEIGHT (KG)" style={{ flex: 1 }}>
-                    <TextInput style={[styles.formInput, { backgroundColor: colors.card, borderColor: colors.border, color: colors.foreground }]} placeholder="0.0" placeholderTextColor={colors.mutedForeground} keyboardType="numeric" value={form.weight} onChangeText={(v) => setForm({ ...form, weight: v })} />
+                  <FormRow label="UNIT" style={{ width: 100 }}>
+                    <View style={[styles.unitToggle, { backgroundColor: colors.card, borderColor: colors.border }]}>
+                      {(["ctn", "plt"] as QtyUnit[]).map((u) => (
+                        <TouchableOpacity
+                          key={u}
+                          style={[styles.unitOption, form.qtyUnit === u && { backgroundColor: colors.primary }]}
+                          onPress={() => setFormQtyUnit(u)}
+                        >
+                          <Text style={[styles.unitOptionText, { color: form.qtyUnit === u ? "#fff" : colors.foreground }]}>{u}</Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
                   </FormRow>
                 </View>
-                <FormRow label="DIMENSIONS (L × W × H cm)" style={{ marginTop: 6 }}>
-                  <TextInput style={[styles.formInput, { backgroundColor: colors.card, borderColor: colors.border, color: colors.foreground }]} placeholder="e.g. 60×40×30" placeholderTextColor={colors.mutedForeground} value={form.dims} onChangeText={(v) => setForm({ ...form, dims: v })} />
+                <FormRow label="WEIGHT (KG)" style={{ marginTop: 6 }}>
+                  <TextInput style={[styles.formInput, { backgroundColor: colors.card, borderColor: colors.border, color: colors.foreground }]} placeholder="0.0" placeholderTextColor={colors.mutedForeground} keyboardType="numeric" value={form.weight} onChangeText={(v) => setForm({ ...form, weight: v })} />
+                </FormRow>
+                <FormRow label={`DIMENSIONS (L × W × H cm)${form.qtyUnit === "plt" ? "" : ` · ${form.dims.length} row${form.dims.length === 1 ? "" : "s"}`}`} style={{ marginTop: 6 }}>
+                  {form.dims.map((d, i) => (
+                    <View key={i} style={[styles.dimRow, { backgroundColor: colors.card, borderColor: colors.border }]}>
+                      <TextInput style={[styles.dimInput, { borderColor: colors.border, backgroundColor: colors.background, color: colors.foreground }]} placeholder="L" placeholderTextColor={colors.mutedForeground} keyboardType="numeric" value={d.length} onChangeText={(v) => setFormDim(i, "length", v)} />
+                      <Text style={[styles.dimX, { color: colors.mutedForeground }]}>×</Text>
+                      <TextInput style={[styles.dimInput, { borderColor: colors.border, backgroundColor: colors.background, color: colors.foreground }]} placeholder="W" placeholderTextColor={colors.mutedForeground} keyboardType="numeric" value={d.width} onChangeText={(v) => setFormDim(i, "width", v)} />
+                      <Text style={[styles.dimX, { color: colors.mutedForeground }]}>×</Text>
+                      <TextInput style={[styles.dimInput, { borderColor: colors.border, backgroundColor: colors.background, color: colors.foreground }]} placeholder="H" placeholderTextColor={colors.mutedForeground} keyboardType="numeric" value={d.height} onChangeText={(v) => setFormDim(i, "height", v)} />
+                      <Text style={[styles.dimUnit, { color: colors.mutedForeground }]}>cm</Text>
+                    </View>
+                  ))}
                 </FormRow>
               </View>
             </FormRow>
@@ -727,15 +833,37 @@ export default function JobsScreen() {
             <FormRow label="CARGO METRICS">
               <View style={[styles.metricsPanel, { backgroundColor: colors.secondary, borderColor: colors.border }]}>
                 <View style={styles.twoCol}>
-                  <FormRow label="QTY (PCS)" style={{ flex: 1 }}>
-                    <TextInput style={[styles.formInput, { backgroundColor: colors.card, borderColor: colors.border, color: colors.foreground }]} placeholder="0" placeholderTextColor={colors.mutedForeground} keyboardType="numeric" value={editForm.qty} onChangeText={(v) => setEditForm({ ...editForm, qty: v })} />
+                  <FormRow label="QTY" style={{ flex: 1 }}>
+                    <TextInput style={[styles.formInput, { backgroundColor: colors.card, borderColor: colors.border, color: colors.foreground }]} placeholder="0" placeholderTextColor={colors.mutedForeground} keyboardType="numeric" value={editForm.qty} onChangeText={setEditQty} />
                   </FormRow>
-                  <FormRow label="WEIGHT (KG)" style={{ flex: 1 }}>
-                    <TextInput style={[styles.formInput, { backgroundColor: colors.card, borderColor: colors.border, color: colors.foreground }]} placeholder="0.0" placeholderTextColor={colors.mutedForeground} keyboardType="numeric" value={editForm.weight} onChangeText={(v) => setEditForm({ ...editForm, weight: v })} />
+                  <FormRow label="UNIT" style={{ width: 100 }}>
+                    <View style={[styles.unitToggle, { backgroundColor: colors.card, borderColor: colors.border }]}>
+                      {(["ctn", "plt"] as QtyUnit[]).map((u) => (
+                        <TouchableOpacity
+                          key={u}
+                          style={[styles.unitOption, editForm.qtyUnit === u && { backgroundColor: colors.primary }]}
+                          onPress={() => setEditQtyUnit(u)}
+                        >
+                          <Text style={[styles.unitOptionText, { color: editForm.qtyUnit === u ? "#fff" : colors.foreground }]}>{u}</Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
                   </FormRow>
                 </View>
-                <FormRow label="DIMENSIONS (L × W × H cm)" style={{ marginTop: 6 }}>
-                  <TextInput style={[styles.formInput, { backgroundColor: colors.card, borderColor: colors.border, color: colors.foreground }]} placeholder="e.g. 60×40×30" placeholderTextColor={colors.mutedForeground} value={editForm.dimensions} onChangeText={(v) => setEditForm({ ...editForm, dimensions: v })} />
+                <FormRow label="WEIGHT (KG)" style={{ marginTop: 6 }}>
+                  <TextInput style={[styles.formInput, { backgroundColor: colors.card, borderColor: colors.border, color: colors.foreground }]} placeholder="0.0" placeholderTextColor={colors.mutedForeground} keyboardType="numeric" value={editForm.weight} onChangeText={(v) => setEditForm({ ...editForm, weight: v })} />
+                </FormRow>
+                <FormRow label={`DIMENSIONS (L × W × H cm)${editForm.qtyUnit === "plt" ? "" : ` · ${editForm.dims.length} row${editForm.dims.length === 1 ? "" : "s"}`}`} style={{ marginTop: 6 }}>
+                  {editForm.dims.map((d, i) => (
+                    <View key={i} style={[styles.dimRow, { backgroundColor: colors.card, borderColor: colors.border }]}>
+                      <TextInput style={[styles.dimInput, { borderColor: colors.border, backgroundColor: colors.background, color: colors.foreground }]} placeholder="L" placeholderTextColor={colors.mutedForeground} keyboardType="numeric" value={d.length} onChangeText={(v) => setEditDim(i, "length", v)} />
+                      <Text style={[styles.dimX, { color: colors.mutedForeground }]}>×</Text>
+                      <TextInput style={[styles.dimInput, { borderColor: colors.border, backgroundColor: colors.background, color: colors.foreground }]} placeholder="W" placeholderTextColor={colors.mutedForeground} keyboardType="numeric" value={d.width} onChangeText={(v) => setEditDim(i, "width", v)} />
+                      <Text style={[styles.dimX, { color: colors.mutedForeground }]}>×</Text>
+                      <TextInput style={[styles.dimInput, { borderColor: colors.border, backgroundColor: colors.background, color: colors.foreground }]} placeholder="H" placeholderTextColor={colors.mutedForeground} keyboardType="numeric" value={d.height} onChangeText={(v) => setEditDim(i, "height", v)} />
+                      <Text style={[styles.dimUnit, { color: colors.mutedForeground }]}>cm</Text>
+                    </View>
+                  ))}
                 </FormRow>
               </View>
             </FormRow>
@@ -743,7 +871,7 @@ export default function JobsScreen() {
             <FormRow label="MARKINGS / LABELS">
               <View style={styles.markingsGrid}>
                 {MARKINGS_OPTIONS.map((m) => {
-                  const selected = editForm.selectedMarkings.includes(m);
+                  const selected = editForm.customMarkings.split(/[,;\n]/).map((s) => s.trim()).filter(Boolean).includes(m);
                   const cfg = MARKING_COLORS[m] ?? { bg: "#F1F5F9", text: "#475569", iconName: "tag" as const };
                   return (
                     <TouchableOpacity
@@ -757,6 +885,13 @@ export default function JobsScreen() {
                   );
                 })}
               </View>
+              <TextInput
+                style={[styles.formInput, { marginTop: 10, backgroundColor: colors.card, borderColor: colors.border, color: colors.foreground }]}
+                placeholder="Type or edit markings (comma-separated)"
+                placeholderTextColor={colors.mutedForeground}
+                value={editForm.customMarkings}
+                onChangeText={(v) => setEditForm({ ...editForm, customMarkings: v })}
+              />
             </FormRow>
           </ScrollView>
 
@@ -921,6 +1056,13 @@ const styles = StyleSheet.create({
   cargoChip: { paddingHorizontal: 12, paddingVertical: 7, borderRadius: 20, borderWidth: 1 },
   cargoChipText: { fontSize: 12, fontWeight: "500" as const },
   metricsPanel: { borderRadius: 12, borderWidth: 1, padding: 14, gap: 6 },
+  unitToggle: { flexDirection: "row", borderRadius: 10, borderWidth: 1, padding: 3, gap: 3, overflow: "hidden" },
+  unitOption: { flex: 1, alignItems: "center", justifyContent: "center", paddingVertical: 10, borderRadius: 8 },
+  unitOptionText: { fontSize: 12, fontWeight: "700" as const },
+  dimRow: { flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 10, paddingVertical: 8, borderRadius: 10, borderWidth: 1, marginBottom: 8 },
+  dimInput: { flex: 1, paddingHorizontal: 6, paddingVertical: 8, borderRadius: 8, borderWidth: 1, fontSize: 14, textAlign: "center" },
+  dimX: { fontSize: 14, fontWeight: "700" as const },
+  dimUnit: { fontSize: 12, fontWeight: "600" as const },
   // POD Sheet
   podRoot: { flex: 1 },
   podHeader: { flexDirection: "row", alignItems: "center", padding: 20, borderBottomWidth: 1 },

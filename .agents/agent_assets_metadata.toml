@@ -1,8 +1,13 @@
 uploads = []
-outputs = []
 
 [[generated]]
 id = "vDW9NLzXFQbpoGhwnWncn"
 uri = "file://artifacts/mobile/assets/images/app-icon.png"
 type = "image"
 title = "TDMS app icon navy truck"
+
+[[outputs]]
+id = "3BgwGMYMxNsrN0_srjr-o"
+uri = "file://screenshots/jobs-tab.jpg"
+type = "image"
+title = "TDMS Mobile - Job Bookings Tab"
