@@ -1,0 +1,1 @@
+- [Explicit verification state](explicit-verification-state.md) — Form verification must be tracked by separate boolean flags, never inferred from text field contents, to avoid false "verified/stamped" states and unwanted step locking.

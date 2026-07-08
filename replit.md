@@ -4,9 +4,10 @@ A mobile transport & logistics dashboard for field operators and warehouse staff
 
 ## Run & Operate
 
-- **Mobile App** (preview): `PORT=8099 pnpm --filter @workspace/mobile run dev` — Expo web on port 8099
-- **API Server**: `PORT=8080 pnpm --filter @workspace/api-server run dev` — Express on port 8080
-- `pnpm run typecheck` — full typecheck across all packages
+- **Mobile App** (preview): click **Run** or start the workflow `artifacts/mobile: expo` — Expo web on the assigned artifact port
+- **API Server**: start the workflow `artifacts/api-server: API Server` — Express on port 8080
+- `pnpm --filter @workspace/mobile run typecheck` — typecheck the mobile package
+- `pnpm run typecheck` — full typecheck across all packages (currently fails in `artifacts/mockup-sandbox` due to pre-existing React 19 type mismatches; mobile and api-server pass)
 - `pnpm run build` — typecheck + build all packages
 - `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
 - `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
@@ -49,7 +50,7 @@ _Populate as you build — explicit user instructions worth remembering across s
 ## Gotchas
 
 - `DATABASE_URL` is runtime-managed by Replit — do not set it manually.
-- Port 8099 (mobile) and 8080 (API) must be used; these are set explicitly in the workflow commands since artifacts were imported without managed workflow registration.
+- The mobile app is now a Replit-managed artifact (`artifacts/mobile: expo`); the port is assigned automatically, so use the preview pane or the Run button instead of hard-coding 8099.
 - Run `pnpm --filter @workspace/api-spec run codegen` after any change to `openapi.yaml`.
 
 ## Pointers

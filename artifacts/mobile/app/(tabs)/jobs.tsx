@@ -104,6 +104,8 @@ type PodPhase = "idle" | "capture" | "uploading" | "complete";
 
 const CIRC = 2 * Math.PI * 26; // circumference for r=26
 
+const PHASE_LABELS = ["Pick up", "Warehouse In", "Warehouse Out", "Acceptance"];
+
 export default function JobsScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
@@ -295,6 +297,7 @@ export default function JobsScreen() {
         time: "",
         quantity: "",
         warehouseRep: "",
+        warehouseRepVerified: false,
       },
       step4: {
         mawb: manifest.mawb !== "N/A" ? manifest.mawb : "",
@@ -307,6 +310,7 @@ export default function JobsScreen() {
         time: "",
         quantity: "",
         airlineRep: "",
+        airlineRepVerified: false,
       },
     };
     const air = storedAir
@@ -594,6 +598,20 @@ export default function JobsScreen() {
     const manifest = getManifest(job.id);
     const status = getStatus(job);
     const isActive = status === "IN_TRANSIT" || status === "FOR_DISPATCH";
+    const phase = (() => {
+      const air = localAirForms[job.id];
+      if (air) {
+        if (air.step4.airlineRepVerified) return 4;
+        if (air.step3.warehouseRepVerified) return 3;
+        if (air.step2.repVerified) return 2;
+        if (air.step1.pickupVerified) return 1;
+      }
+      if (status === "DELIVERED") return 4;
+      if (status === "IN_TRANSIT" || status === "DELAYED") return 2;
+      if (status === "FOR_DISPATCH") return 1;
+      return 0;
+    })();
+    const nextLabel = phase >= 4 ? "Completed" : `Next: ${PHASE_LABELS[phase]}`;
 
     return (
       <View
@@ -750,6 +768,22 @@ export default function JobsScreen() {
                     Auto-stamped
                   </Text>
                 </View>
+              </View>
+              <View style={[styles.milestoneRow, { borderColor: colors.border }]}>
+                <Text style={[styles.milestoneLabel, { color: colors.mutedForeground }]}>Operational progress</Text>
+                <View style={styles.milestoneDots}>
+                  {PHASE_LABELS.map((label, idx) => {
+                    const completed = idx < phase;
+                    const isLast = idx === PHASE_LABELS.length - 1;
+                    return (
+                      <React.Fragment key={label}>
+                        <View style={[styles.milestoneDot, { backgroundColor: completed ? "#E87722" : "#E2E8F0" }]} />
+                        {!isLast && <View style={[styles.milestoneConnector, { backgroundColor: idx < phase ? "#E87722" : "#E2E8F0" }]} />}
+                      </React.Fragment>
+                    );
+                  })}
+                </View>
+                <Text style={[styles.milestoneNext, { color: colors.primary }]}>{nextLabel}</Text>
               </View>
               <View style={[styles.metricsRow, { borderColor: colors.border }]}>
                 <MetricBlock
@@ -2173,4 +2207,11 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   uploadBtnText: { color: "#fff", fontSize: 15, fontWeight: "700" as const },
+  // Progress milestones
+  milestoneRow: { padding: 12, borderTopWidth: 1 },
+  milestoneLabel: { fontSize: 10, fontWeight: "600" as const, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 8 },
+  milestoneDots: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+  milestoneDot: { width: 8, height: 8, borderRadius: 4 },
+  milestoneConnector: { flex: 1, height: 2, marginHorizontal: 6 },
+  milestoneNext: { fontSize: 11, fontWeight: "600" as const, marginTop: 8 },
 });

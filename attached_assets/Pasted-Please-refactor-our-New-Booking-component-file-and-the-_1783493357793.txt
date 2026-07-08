@@ -1,0 +1,23 @@
+Please refactor our New Booking component file and the Dashboard Job List Card component inline to fix styling bugs, layout duplications, and event states. Keep everything credit-efficient and aligned to Material 3 grid principles.
+
+Apply these exact combined updates:
+
+1. Decompress & Fix the Step Tracker Header:
+- Strip away excessive internal side padding or margins from the 4-step wizard card wrapper.
+- Set the step wrapper to 'width: "100%"', 'flexDirection: "row"', and 'justifyContent: "space-between"'. Distribute steps (1, 2, 3, 4) evenly across the full width so text labels stay on one line and do not wrap layout awkwardly.
+
+2. Strict Form Row Grid Realignment & Column Layout:
+- Group all side-by-side components inside Steps 1 through 4 into clear horizontal rows ('flexDirection: "row"', 'alignItems: "center"').
+- Explicitly split the rows into a left-side container and a right-side container—each with a width of exactly '48%'—so fields align perfectly and flush down the page. Add a uniform spacing of 'marginBottom: 16' to all text input containers.
+
+3. Fix Instant Stamps Trigger & Field Duplications:
+- Stop the digital stamp fields from instantly shifting to 'Verified' or 'Stamped' upon typing characters in the text input. The verified stamp state must toggle ONLY when the operator explicitly presses the green verification button.
+- Clean up Step 2 (Warehouse In) blocks: remove the duplicate fill-up iteration so checklists, weather, and fields display exactly once.
+- Remove the redundant global Remarks box lingering at the very bottom of the entire screen view. The step-specific remarks are sufficient.
+
+4. Form Scroll View Container Fix:
+- Replace any bottom styles on the main form ScrollView with 'contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 160 }}'. This ensures the content can be scrolled entirely clear of the absolute bottom 'Cancel / Create Booking' footer button tray.
+
+5. Add Live Progress Milestones to Dashboard Cards:
+- In the main Job Bookings list view card, insert a compact, non-interactive horizontal progress pipeline (4 connected micro-dots or segments) right below the HAWB text info.
+- Color completed operational phases in our brand Orange (#E87722) and upcoming phases in light gray (#E2E8F0) so users can instantly scan what is completed and what the next step is (e.g., 'Next: Warehouse In') without entering edit mode.
