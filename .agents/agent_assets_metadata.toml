@@ -41,3 +41,9 @@ id = "HirzYgfftRinpYXTAJC0w"
 uri = "file://screenshots/verify/jobs-step-tracker.jpg"
 type = "image"
 title = "TDMS Mobile — Job Bookings (step tracker updated in New Booking modal)"
+
+[[outputs]]
+id = "2aR0MauI9UzDLYhIV0q8N"
+uri = "file://screenshots/verify/jobs-form-grid.jpg"
+type = "image"
+title = "TDMS Mobile — Job Bookings (form grid updated in New Booking modal)"
