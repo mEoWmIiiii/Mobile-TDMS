@@ -1,0 +1,62 @@
+Please update the Air Export Cargo component to support a 4-step workflow. To maximize credit efficiency and code reuse, keep all states encapsulated within our existing component file, maintaining our corporate Navy (#0A1F4C) and Orange (#E87722) styling system.
+
+Implement the following layout and feature requirements:
+
+1. Global Shipment Header (Symmetrical 2-Column Grid):
+At the top of the screen, show a static or editable overview panel split cleanly into two sides:
+- Left Side: Client, HAWB, Destination, Description of Goods.
+- Right Side: Date, Quantity, Dimension, Actual Weight.
+
+2. Global Time Format Rule:
+- All time inputs across all steps must use custom-formatted military time (e.g., placeholder "1300h", "0845h"). Use a standard text input with a mask or simple validation rather than an external library.
+
+3. Step-by-Step Layout with Simulated Role Restrictions:
+Implement a 4-step sequential status workflow. Use conditional rendering to simulate role-based views dynamically (e.g., a simple selector at the top or based on current step index) so employees see only their specific section:
+
+---
+
+STEP 1: Pick up at Client
+- Left Side: 
+  * Acceptance Details Checklist: [ ] Good physical condition, [ ] Labels/marking.
+  * Remarks (Text input line, labeled "Remarks ______" with a placeholder "Fill up if condition is OK").
+  * Weather condition (Text field).
+  * YLPH Driver (Text field).
+- Right Side: 
+  * Arrival Date.
+  * Arrival Time (Military time format).
+
+---
+
+STEP 2: Warehouse In (Restrict view to Warehouse In Employee)
+- Left Side: 
+  * Acceptance Details Checklist: [ ] Good physical condition, [ ] Labels/marking.
+  * Remarks (Text input line, "Fill up if condition is OK").
+  * Weather Condition.
+- Right Side: 
+  * Date, Time (Military format), Quantity.
+  * Digital Stamps Panel: A simple "Rep Login/Verify" input button that simulated-stamps and locks the verified names for "TLI Warehouse Rep" and "YLPH Warehouse Rep" upon submission.
+
+---
+
+STEP 3: Warehouse Out (Restrict view to Warehouse Out Employee)
+- Left Side: 
+  * Acceptance Details Checklist: [ ] Good physical condition, [ ] Labels/marking.
+  * Remarks (Text input line, "Fill up if condition is OK").
+  * Weather Condition.
+- Right Side: 
+  * Date, Time (Military format), Quantity.
+  * Release Digital Stamp: A verified name input box labeled "Warehouse Rep" that acts as a digital sign-off stamp.
+
+---
+
+STEP 4: Acceptance by YLPH Airlines Representative (Restrict view to Airline Rep)
+- Left Side: 
+  * MAWB (Text Input field).
+  * Acceptance Details Checklist: [ ] Good physical condition, [ ] Labels/marking.
+  * Remarks (Text input line, "Fill up if condition is OK").
+  * Weather Condition.
+- Right Side: 
+  * Date, Time (Military format), Quantity.
+  * Airline Rep Digital Stamp: A verified sign-off field displaying the Representative's stamp.
+
+Code Optimization Rule: Do not install external node modules or step wizard packages. Manage the state transition using a simple index integer state (`step`, `setStep`) and handle structural styling with a clean, responsive layout wrapper.
