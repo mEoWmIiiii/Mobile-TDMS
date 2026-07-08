@@ -47,6 +47,7 @@ interface AirStep1 {
   goodPhysicalCondition: boolean;
   labelsMarking: boolean;
   remarks: string;
+  remarksChecked: boolean;
   weather: string;
   ylphDriver: string;
   arrivalDate: string;
@@ -57,6 +58,7 @@ interface AirStep2 {
   goodPhysicalCondition: boolean;
   labelsMarking: boolean;
   remarks: string;
+  remarksChecked: boolean;
   weather: string;
   date: string;
   time: string;
@@ -70,6 +72,7 @@ interface AirStep3 {
   goodPhysicalCondition: boolean;
   labelsMarking: boolean;
   remarks: string;
+  remarksChecked: boolean;
   weather: string;
   date: string;
   time: string;
@@ -82,6 +85,7 @@ interface AirStep4 {
   goodPhysicalCondition: boolean;
   labelsMarking: boolean;
   remarks: string;
+  remarksChecked: boolean;
   weather: string;
   date: string;
   time: string;
@@ -236,8 +240,7 @@ export default function JobsScreen() {
   const uploadProgress = useRef(new Animated.Value(0)).current;
   const airFieldsHeight = useRef(new Animated.Value(0)).current;
 
-  // New booking form
-  const [form, setForm] = useState<FormState>({
+  const EMPTY_FORM: FormState = {
     customer: "", contact: "", origin: "", destination: "",
     weight: "", qty: "", qtyUnit: "ctn" as QtyUnit,
     dims: [{ length: "", width: "", height: "" }] as Dim[],
@@ -252,7 +255,8 @@ export default function JobsScreen() {
       step1: {
         goodPhysicalCondition: false,
         labelsMarking: false,
-        remarks: "",
+        remarks: "ok",
+        remarksChecked: false,
         weather: "",
         ylphDriver: "",
         arrivalDate: "",
@@ -261,7 +265,8 @@ export default function JobsScreen() {
       step2: {
         goodPhysicalCondition: false,
         labelsMarking: false,
-        remarks: "",
+        remarks: "ok",
+        remarksChecked: false,
         weather: "",
         date: "",
         time: "",
@@ -273,7 +278,8 @@ export default function JobsScreen() {
       step3: {
         goodPhysicalCondition: false,
         labelsMarking: false,
-        remarks: "",
+        remarks: "ok",
+        remarksChecked: false,
         weather: "",
         date: "",
         time: "",
@@ -284,7 +290,8 @@ export default function JobsScreen() {
         mawb: "",
         goodPhysicalCondition: false,
         labelsMarking: false,
-        remarks: "",
+        remarks: "ok",
+        remarksChecked: false,
         weather: "",
         date: "",
         time: "",
@@ -292,7 +299,13 @@ export default function JobsScreen() {
         airlineRep: "",
       },
     },
-  });
+  };
+
+  // New booking form
+  const [form, setForm] = useState<FormState>(EMPTY_FORM);
+
+  // Editable job list (mirrors JOBS initially; new bookings are prepended)
+  const [jobBookings, setJobBookings] = useState<Job[]>(JOBS);
 
   JOBS.forEach((job) => {
     if (!animRefs.current[job.id]) animRefs.current[job.id] = new Animated.Value(0);
@@ -337,6 +350,71 @@ export default function JobsScreen() {
       ...f,
       air: { ...f.air, [stepKey]: { ...f.air[stepKey], [key]: !f.air[stepKey][key] } as AirExportSteps[S] },
     }));
+  };
+
+  const toggleRemarksChecked = (stepKey: AirStepKey) => {
+    setForm((f) => {
+      const step = f.air[stepKey];
+      const checked = !step.remarksChecked;
+      const nextStep = {
+        ...step,
+        remarksChecked: checked,
+        remarks: checked ? (step.remarks === "ok" ? "" : step.remarks) : "ok",
+      } as AirExportSteps[AirStepKey];
+      return { ...f, air: { ...f.air, [stepKey]: nextStep } };
+    });
+  };
+
+  const createBooking = () => {
+    const nextNum = jobBookings.length + 1;
+    const nextId = `JB-${new Date().getFullYear()}-${String(nextNum).padStart(3, "0")}`;
+    const driver = form.mode === "Air" ? (form.air.step1.ylphDriver || "TBD") : "TBD";
+    const driverInitials = driver.split(/\s+/).map((n) => n[0]).filter(Boolean).join("").slice(0, 2).toUpperCase() || "TBD";
+    const today = new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+    const airRemarks = [form.air.step1.remarks, form.air.step2.remarks, form.air.step3.remarks, form.air.step4.remarks]
+      .filter((r) => r && r !== "ok")
+      .join(" · ");
+
+    const newJob: Job = {
+      id: nextId,
+      customer: form.customer,
+      contact: form.contact,
+      origin: form.origin,
+      destination: form.destination,
+      driver,
+      driverInitials,
+      truck: form.mode === "Air" ? "AIR" : "TBD",
+      cargo: form.descriptionOfGoods || form.cargoType || "General Cargo",
+      weight: Number(form.weight) || 0,
+      mode: form.mode,
+      status: "CONFIRMED",
+      date: form.date || today,
+      remarks: airRemarks || form.remarks || undefined,
+    };
+
+    const newManifest: Manifest & { qtyUnit?: QtyUnit } = {
+      mawb: form.mode === "Air" ? (form.air.step4.mawb || "N/A") : "N/A",
+      shipper: form.customer,
+      origin: form.origin,
+      cutoff: form.cutoff,
+      hawb: form.hawb || "N/A",
+      date: form.date || today,
+      qty: Number(form.qty) || 0,
+      qtyUnit: form.qtyUnit,
+      weight: Number(form.weight) || 0,
+      dimensions: formatDim(form.dims),
+      markings: form.selectedMarkings,
+    };
+
+    if (!animRefs.current[nextId]) animRefs.current[nextId] = new Animated.Value(0);
+
+    setJobBookings((prev) => [newJob, ...prev]);
+    setLocalStatuses((prev) => ({ ...prev, [nextId]: newJob.status }));
+    setLocalManifests((prev) => ({ ...prev, [nextId]: newManifest }));
+    setForm(EMPTY_FORM);
+    airFieldsHeight.setValue(0);
+    setShowModal(false);
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
   };
 
   const stampReps = () => {
@@ -459,7 +537,7 @@ export default function JobsScreen() {
 
   const getStatus = (job: Job): JobStatus => localStatuses[job.id] ?? job.status;
 
-  const filtered = JOBS.filter((job) => {
+  const filtered = jobBookings.filter((job) => {
     const q = search.toLowerCase();
     const matchSearch = !search || job.id.toLowerCase().includes(q) || job.customer.toLowerCase().includes(q);
     const matchStatus = !filterStatus || getStatus(job) === filterStatus;
@@ -698,7 +776,7 @@ export default function JobsScreen() {
             </TouchableOpacity>
           </View>
 
-          <ScrollView style={styles.modalScroll} contentContainerStyle={{ padding: 16, gap: 14, paddingBottom: 100 }} keyboardShouldPersistTaps="handled">
+          <ScrollView style={styles.modalScroll} contentContainerStyle={{ padding: 16, gap: 14, paddingBottom: 140 }} keyboardShouldPersistTaps="handled">
             <FormRow label="CUSTOMER NAME *">
               <TextInput style={[styles.formInput, { backgroundColor: colors.card, borderColor: colors.border, color: colors.foreground }]} placeholder="Enter name" placeholderTextColor={colors.mutedForeground} value={form.customer} onChangeText={(v) => setForm({ ...form, customer: v })} />
             </FormRow>
@@ -855,7 +933,21 @@ export default function JobsScreen() {
                           <CheckBox label="Labels/marking" checked={form.air.step1.labelsMarking} onToggle={() => toggleAirStep("step1", "labelsMarking")} />
                         </FormRow>
                         <FormRow label="REMARKS" style={{ marginTop: 8 }}>
-                          <TextInput style={[styles.formInput, { backgroundColor: colors.background, borderColor: colors.border, color: colors.foreground }]} placeholder="Fill up if condition is OK" placeholderTextColor={colors.mutedForeground} value={form.air.step1.remarks} onChangeText={(v) => updateAirStep("step1", "remarks", v)} />
+                          <CheckBox label="Add Remarks" checked={form.air.step1.remarksChecked} onToggle={() => toggleRemarksChecked("step1")} />
+                          <TextInput
+                            style={[styles.formInput, {
+                              marginTop: 8,
+                              backgroundColor: colors.background,
+                              borderColor: colors.border,
+                              color: colors.foreground,
+                              opacity: form.air.step1.remarksChecked ? 1 : 0.6,
+                            }]}
+                            placeholder="Fill up if condition is OK"
+                            placeholderTextColor={colors.mutedForeground}
+                            value={form.air.step1.remarks}
+                            onChangeText={(v) => updateAirStep("step1", "remarks", v)}
+                            editable={form.air.step1.remarksChecked}
+                          />
                         </FormRow>
                         <FormRow label="WEATHER CONDITION" style={{ marginTop: 8 }}>
                           <TextInput style={[styles.formInput, { backgroundColor: colors.background, borderColor: colors.border, color: colors.foreground }]} placeholder="e.g. Clear" placeholderTextColor={colors.mutedForeground} value={form.air.step1.weather} onChangeText={(v) => updateAirStep("step1", "weather", v)} />
@@ -890,7 +982,21 @@ export default function JobsScreen() {
                           <CheckBox label="Labels/marking" checked={form.air.step2.labelsMarking} onToggle={() => toggleAirStep("step2", "labelsMarking")} />
                         </FormRow>
                         <FormRow label="REMARKS" style={{ marginTop: 8 }}>
-                          <TextInput style={[styles.formInput, { backgroundColor: colors.background, borderColor: colors.border, color: colors.foreground }]} placeholder="Fill up if condition is OK" placeholderTextColor={colors.mutedForeground} value={form.air.step2.remarks} onChangeText={(v) => updateAirStep("step2", "remarks", v)} />
+                          <CheckBox label="Add Remarks" checked={form.air.step2.remarksChecked} onToggle={() => toggleRemarksChecked("step2")} />
+                          <TextInput
+                            style={[styles.formInput, {
+                              marginTop: 8,
+                              backgroundColor: colors.background,
+                              borderColor: colors.border,
+                              color: colors.foreground,
+                              opacity: form.air.step2.remarksChecked ? 1 : 0.6,
+                            }]}
+                            placeholder="Fill up if condition is OK"
+                            placeholderTextColor={colors.mutedForeground}
+                            value={form.air.step2.remarks}
+                            onChangeText={(v) => updateAirStep("step2", "remarks", v)}
+                            editable={form.air.step2.remarksChecked}
+                          />
                         </FormRow>
                         <FormRow label="WEATHER CONDITION" style={{ marginTop: 8 }}>
                           <TextInput style={[styles.formInput, { backgroundColor: colors.background, borderColor: colors.border, color: colors.foreground }]} placeholder="e.g. Clear" placeholderTextColor={colors.mutedForeground} value={form.air.step2.weather} onChangeText={(v) => updateAirStep("step2", "weather", v)} />
@@ -907,7 +1013,7 @@ export default function JobsScreen() {
                           <TextInput style={[styles.formInput, { backgroundColor: colors.background, borderColor: colors.border, color: colors.foreground }]} placeholder="0" placeholderTextColor={colors.mutedForeground} keyboardType="numeric" value={form.air.step2.quantity} onChangeText={(v) => updateAirStep("step2", "quantity", v)} />
                         </FormRow>
                         <FormRow label="DIGITAL STAMPS" style={{ marginTop: 8 }}>
-                          <View style={[styles.stampPanel, { backgroundColor: colors.background, borderColor: colors.border }]}>
+                          <View style={[styles.stampPanel, { backgroundColor: "#F5F7FA", borderColor: colors.border }]}>
                             <TextInput style={[styles.formInput, { backgroundColor: colors.card, borderColor: colors.border, color: colors.foreground }]} placeholder="TLI Warehouse Rep" placeholderTextColor={colors.mutedForeground} value={form.air.step2.tliWarehouseRep} onChangeText={(v) => updateAirStep("step2", "tliWarehouseRep", v)} editable={!form.air.step2.repVerified} />
                             <TextInput style={[styles.formInput, { marginTop: 8, backgroundColor: colors.card, borderColor: colors.border, color: colors.foreground }]} placeholder="YLPH Warehouse Rep" placeholderTextColor={colors.mutedForeground} value={form.air.step2.ylphWarehouseRep} onChangeText={(v) => updateAirStep("step2", "ylphWarehouseRep", v)} editable={!form.air.step2.repVerified} />
                             <TouchableOpacity style={[styles.stampBtn, { backgroundColor: form.air.step2.repVerified ? "#059669" : colors.primary }]} onPress={stampReps} disabled={form.air.step2.repVerified}>
@@ -934,7 +1040,21 @@ export default function JobsScreen() {
                           <CheckBox label="Labels/marking" checked={form.air.step3.labelsMarking} onToggle={() => toggleAirStep("step3", "labelsMarking")} />
                         </FormRow>
                         <FormRow label="REMARKS" style={{ marginTop: 8 }}>
-                          <TextInput style={[styles.formInput, { backgroundColor: colors.background, borderColor: colors.border, color: colors.foreground }]} placeholder="Fill up if condition is OK" placeholderTextColor={colors.mutedForeground} value={form.air.step3.remarks} onChangeText={(v) => updateAirStep("step3", "remarks", v)} />
+                          <CheckBox label="Add Remarks" checked={form.air.step3.remarksChecked} onToggle={() => toggleRemarksChecked("step3")} />
+                          <TextInput
+                            style={[styles.formInput, {
+                              marginTop: 8,
+                              backgroundColor: colors.background,
+                              borderColor: colors.border,
+                              color: colors.foreground,
+                              opacity: form.air.step3.remarksChecked ? 1 : 0.6,
+                            }]}
+                            placeholder="Fill up if condition is OK"
+                            placeholderTextColor={colors.mutedForeground}
+                            value={form.air.step3.remarks}
+                            onChangeText={(v) => updateAirStep("step3", "remarks", v)}
+                            editable={form.air.step3.remarksChecked}
+                          />
                         </FormRow>
                         <FormRow label="WEATHER CONDITION" style={{ marginTop: 8 }}>
                           <TextInput style={[styles.formInput, { backgroundColor: colors.background, borderColor: colors.border, color: colors.foreground }]} placeholder="e.g. Clear" placeholderTextColor={colors.mutedForeground} value={form.air.step3.weather} onChangeText={(v) => updateAirStep("step3", "weather", v)} />
@@ -951,7 +1071,7 @@ export default function JobsScreen() {
                           <TextInput style={[styles.formInput, { backgroundColor: colors.background, borderColor: colors.border, color: colors.foreground }]} placeholder="0" placeholderTextColor={colors.mutedForeground} keyboardType="numeric" value={form.air.step3.quantity} onChangeText={(v) => updateAirStep("step3", "quantity", v)} />
                         </FormRow>
                         <FormRow label="RELEASE DIGITAL STAMP" style={{ marginTop: 8 }}>
-                          <View style={[styles.stampPanel, { backgroundColor: colors.background, borderColor: colors.border }]}>
+                          <View style={[styles.stampPanel, { backgroundColor: "#F5F7FA", borderColor: colors.border }]}>
                             <TextInput style={[styles.formInput, { backgroundColor: colors.card, borderColor: colors.border, color: colors.foreground }]} placeholder="Warehouse Rep" placeholderTextColor={colors.mutedForeground} value={form.air.step3.warehouseRep} onChangeText={(v) => updateAirStep("step3", "warehouseRep", v)} />
                             <TouchableOpacity style={[styles.stampBtn, { backgroundColor: form.air.step3.warehouseRep ? "#059669" : colors.primary }]} onPress={verifyStep3Rep}>
                               <Text style={styles.stampBtnText}>{form.air.step3.warehouseRep ? "Stamped" : "Verify & Stamp"}</Text>
@@ -980,7 +1100,21 @@ export default function JobsScreen() {
                           <CheckBox label="Labels/marking" checked={form.air.step4.labelsMarking} onToggle={() => toggleAirStep("step4", "labelsMarking")} />
                         </FormRow>
                         <FormRow label="REMARKS" style={{ marginTop: 8 }}>
-                          <TextInput style={[styles.formInput, { backgroundColor: colors.background, borderColor: colors.border, color: colors.foreground }]} placeholder="Fill up if condition is OK" placeholderTextColor={colors.mutedForeground} value={form.air.step4.remarks} onChangeText={(v) => updateAirStep("step4", "remarks", v)} />
+                          <CheckBox label="Add Remarks" checked={form.air.step4.remarksChecked} onToggle={() => toggleRemarksChecked("step4")} />
+                          <TextInput
+                            style={[styles.formInput, {
+                              marginTop: 8,
+                              backgroundColor: colors.background,
+                              borderColor: colors.border,
+                              color: colors.foreground,
+                              opacity: form.air.step4.remarksChecked ? 1 : 0.6,
+                            }]}
+                            placeholder="Fill up if condition is OK"
+                            placeholderTextColor={colors.mutedForeground}
+                            value={form.air.step4.remarks}
+                            onChangeText={(v) => updateAirStep("step4", "remarks", v)}
+                            editable={form.air.step4.remarksChecked}
+                          />
                         </FormRow>
                         <FormRow label="WEATHER CONDITION" style={{ marginTop: 8 }}>
                           <TextInput style={[styles.formInput, { backgroundColor: colors.background, borderColor: colors.border, color: colors.foreground }]} placeholder="e.g. Clear" placeholderTextColor={colors.mutedForeground} value={form.air.step4.weather} onChangeText={(v) => updateAirStep("step4", "weather", v)} />
@@ -997,7 +1131,7 @@ export default function JobsScreen() {
                           <TextInput style={[styles.formInput, { backgroundColor: colors.background, borderColor: colors.border, color: colors.foreground }]} placeholder="0" placeholderTextColor={colors.mutedForeground} keyboardType="numeric" value={form.air.step4.quantity} onChangeText={(v) => updateAirStep("step4", "quantity", v)} />
                         </FormRow>
                         <FormRow label="AIRLINE REP DIGITAL STAMP" style={{ marginTop: 8 }}>
-                          <View style={[styles.stampPanel, { backgroundColor: colors.background, borderColor: colors.border }]}>
+                          <View style={[styles.stampPanel, { backgroundColor: "#F5F7FA", borderColor: colors.border }]}>
                             <TextInput style={[styles.formInput, { backgroundColor: colors.card, borderColor: colors.border, color: colors.foreground }]} placeholder="Airline Representative" placeholderTextColor={colors.mutedForeground} value={form.air.step4.airlineRep} onChangeText={(v) => updateAirStep("step4", "airlineRep", v)} />
                             <TouchableOpacity style={[styles.stampBtn, { backgroundColor: form.air.step4.airlineRep ? "#059669" : colors.primary }]} onPress={verifyStep4Rep}>
                               <Text style={styles.stampBtnText}>{form.air.step4.airlineRep ? "Stamped" : "Verify & Stamp"}</Text>
@@ -1070,7 +1204,7 @@ export default function JobsScreen() {
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.submitBtn, { backgroundColor: colors.primary }]}
-              onPress={() => { Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success); setShowModal(false); }}
+              onPress={createBooking}
             >
               <Text style={styles.submitText}>Create Booking</Text>
             </TouchableOpacity>
@@ -1447,7 +1581,7 @@ const styles = StyleSheet.create({
   submitBtn: { flex: 2, paddingVertical: 14, borderRadius: 12, alignItems: "center" },
   submitText: { color: "#fff", fontSize: 15, fontWeight: "700" as const },
   formLabel: { fontSize: 11, fontWeight: "600" as const, textTransform: "uppercase", letterSpacing: 0.5 },
-  formInput: { paddingHorizontal: 14, paddingVertical: 12, borderRadius: 10, borderWidth: 1, fontSize: 14 },
+  formInput: { paddingHorizontal: 14, paddingVertical: 12, borderRadius: 10, borderWidth: 1, fontSize: 14, marginBottom: 16 },
   formTextarea: { paddingHorizontal: 14, paddingVertical: 12, borderRadius: 10, borderWidth: 1, fontSize: 14, minHeight: 80, textAlignVertical: "top" },
   twoCol: { flexDirection: "row", gap: 10 },
   segmentControl: { flexDirection: "row", borderRadius: 10, borderWidth: 1, overflow: "hidden", padding: 3, gap: 3 },
