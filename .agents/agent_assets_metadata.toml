@@ -11,3 +11,9 @@ id = "3BgwGMYMxNsrN0_srjr-o"
 uri = "file://screenshots/jobs-tab.jpg"
 type = "image"
 title = "TDMS Mobile - Job Bookings Tab"
+
+[[outputs]]
+id = "n1MZg4AvETGsgLk1nVy9c"
+uri = "file://screenshots/jobs-tab-air-cargo.jpg"
+type = "image"
+title = "TDMS Mobile - Job Bookings (Air Cargo workflow available)"

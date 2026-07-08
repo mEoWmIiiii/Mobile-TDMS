@@ -43,6 +43,82 @@ interface Dim {
   height: string;
 }
 
+interface AirStep1 {
+  goodPhysicalCondition: boolean;
+  labelsMarking: boolean;
+  remarks: string;
+  weather: string;
+  ylphDriver: string;
+  arrivalDate: string;
+  arrivalTime: string;
+}
+
+interface AirStep2 {
+  goodPhysicalCondition: boolean;
+  labelsMarking: boolean;
+  remarks: string;
+  weather: string;
+  date: string;
+  time: string;
+  quantity: string;
+  tliWarehouseRep: string;
+  ylphWarehouseRep: string;
+  repVerified: boolean;
+}
+
+interface AirStep3 {
+  goodPhysicalCondition: boolean;
+  labelsMarking: boolean;
+  remarks: string;
+  weather: string;
+  date: string;
+  time: string;
+  quantity: string;
+  warehouseRep: string;
+}
+
+interface AirStep4 {
+  mawb: string;
+  goodPhysicalCondition: boolean;
+  labelsMarking: boolean;
+  remarks: string;
+  weather: string;
+  date: string;
+  time: string;
+  quantity: string;
+  airlineRep: string;
+}
+
+interface AirExportSteps {
+  step1: AirStep1;
+  step2: AirStep2;
+  step3: AirStep3;
+  step4: AirStep4;
+}
+
+type AirStepKey = "step1" | "step2" | "step3" | "step4";
+
+interface FormState {
+  customer: string;
+  contact: string;
+  origin: string;
+  destination: string;
+  weight: string;
+  qty: string;
+  qtyUnit: QtyUnit;
+  dims: Dim[];
+  mode: "Land" | "Air";
+  cargoType: string;
+  remarks: string;
+  hawb: string;
+  cutoff: string;
+  selectedMarkings: string[];
+  descriptionOfGoods: string;
+  date: string;
+  airStep: number;
+  air: AirExportSteps;
+}
+
 const parseDim = (raw: string): Dim[] => {
   const parts = raw.split(/[,;]/).map((s) => s.trim()).filter(Boolean);
   return parts.map((p) => {
@@ -56,6 +132,12 @@ const formatDim = (dims: Dim[]) =>
     .filter((d) => d.length || d.width || d.height)
     .map((d) => `${d.length || "0"}×${d.width || "0"}×${d.height || "0"} cm`)
     .join(", ") || "";
+
+const formatMilitaryTime = (value: string) => {
+  const digits = value.replace(/\D/g, "").slice(0, 4);
+  if (digits.length === 4) return `${digits}h`;
+  return digits;
+};
 
 type PodPhase = "idle" | "capture" | "uploading" | "complete";
 
@@ -155,7 +237,7 @@ export default function JobsScreen() {
   const airFieldsHeight = useRef(new Animated.Value(0)).current;
 
   // New booking form
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<FormState>({
     customer: "", contact: "", origin: "", destination: "",
     weight: "", qty: "", qtyUnit: "ctn" as QtyUnit,
     dims: [{ length: "", width: "", height: "" }] as Dim[],
@@ -163,6 +245,53 @@ export default function JobsScreen() {
     cargoType: "", remarks: "",
     hawb: "", cutoff: "1300H",
     selectedMarkings: [] as string[],
+    descriptionOfGoods: "",
+    date: "",
+    airStep: 0,
+    air: {
+      step1: {
+        goodPhysicalCondition: false,
+        labelsMarking: false,
+        remarks: "",
+        weather: "",
+        ylphDriver: "",
+        arrivalDate: "",
+        arrivalTime: "",
+      },
+      step2: {
+        goodPhysicalCondition: false,
+        labelsMarking: false,
+        remarks: "",
+        weather: "",
+        date: "",
+        time: "",
+        quantity: "",
+        tliWarehouseRep: "",
+        ylphWarehouseRep: "",
+        repVerified: false,
+      },
+      step3: {
+        goodPhysicalCondition: false,
+        labelsMarking: false,
+        remarks: "",
+        weather: "",
+        date: "",
+        time: "",
+        quantity: "",
+        warehouseRep: "",
+      },
+      step4: {
+        mawb: "",
+        goodPhysicalCondition: false,
+        labelsMarking: false,
+        remarks: "",
+        weather: "",
+        date: "",
+        time: "",
+        quantity: "",
+        airlineRep: "",
+      },
+    },
   });
 
   JOBS.forEach((job) => {
@@ -187,6 +316,54 @@ export default function JobsScreen() {
       easing: Easing.inOut(Easing.ease),
       useNativeDriver: false,
     }).start();
+  };
+
+  const updateAirStep = <S extends AirStepKey, K extends keyof AirExportSteps[S]>(
+    stepKey: S,
+    key: K,
+    value: AirExportSteps[S][K]
+  ) => {
+    setForm((f) => {
+      const nextStep = { ...f.air[stepKey], [key]: value } as AirExportSteps[S];
+      return { ...f, air: { ...f.air, [stepKey]: nextStep } };
+    });
+  };
+
+  const toggleAirStep = <S extends AirStepKey>(
+    stepKey: S,
+    key: "goodPhysicalCondition" | "labelsMarking"
+  ) => {
+    setForm((f) => ({
+      ...f,
+      air: { ...f.air, [stepKey]: { ...f.air[stepKey], [key]: !f.air[stepKey][key] } as AirExportSteps[S] },
+    }));
+  };
+
+  const stampReps = () => {
+    setForm((f) => ({
+      ...f,
+      air: {
+        ...f.air,
+        step2: { ...f.air.step2, repVerified: true },
+      },
+    }));
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+  };
+
+  const verifyStep3Rep = () => {
+    setForm((f) => ({
+      ...f,
+      air: { ...f.air, step3: { ...f.air.step3, warehouseRep: f.air.step3.warehouseRep || "Warehouse Rep" } },
+    }));
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+  };
+
+  const verifyStep4Rep = () => {
+    setForm((f) => ({
+      ...f,
+      air: { ...f.air, step4: { ...f.air.step4, airlineRep: f.air.step4.airlineRep || "Airline Representative" } },
+    }));
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
   };
 
   const toggleMarking = (m: string) => {
@@ -290,7 +467,7 @@ export default function JobsScreen() {
   });
 
   const topPad = Platform.OS === "web" ? 67 : insets.top;
-  const airHeight = airFieldsHeight.interpolate({ inputRange: [0, 1], outputRange: [0, 320] });
+  const airHeight = airFieldsHeight.interpolate({ inputRange: [0, 1], outputRange: [0, 2200] });
 
   const strokeDash = uploadProgress.interpolate({
     inputRange: [0, 1],
@@ -599,45 +776,251 @@ export default function JobsScreen() {
               <TextInput style={[styles.formInput, { backgroundColor: colors.card, borderColor: colors.border, color: colors.foreground }]} placeholder="e.g. HAWB-0789" placeholderTextColor={colors.mutedForeground} value={form.hawb} onChangeText={(v) => setForm({ ...form, hawb: v })} />
             </FormRow>
 
-            {/* Air Cargo sub-panel — only Cut-off & Markings */}
+            {/* Air Cargo 4-step workflow */}
             <Animated.View style={{ maxHeight: airHeight, overflow: "hidden" }}>
               <View style={[styles.airBlock, { backgroundColor: colors.secondary, borderColor: colors.border }]}>
                 <View style={styles.airBlockHeader}>
                   <Icon name="send" size={13} color={colors.primary} />
-                  <Text style={[styles.airBlockTitle, { color: colors.primary }]}>Air Manifest Details</Text>
+                  <Text style={[styles.airBlockTitle, { color: colors.primary }]}>Air Export Cargo</Text>
                 </View>
-                <FormRow label="CUT-OFF TIME">
-                  <View style={[styles.cutoffInputRow, { backgroundColor: colors.card, borderColor: colors.border }]}>
-                    <Text style={[styles.cutoffInputValue, { color: "#B91C1C" }]}>{form.cutoff}</Text>
-                    <View style={styles.cutoffBtns}>
-                      {["1100H", "1300H", "1500H", "1700H"].map((t) => (
-                        <TouchableOpacity key={t} style={[styles.cutoffOption, form.cutoff === t && { backgroundColor: "#FEF2F2", borderColor: "#F87171" }, { borderColor: colors.border }]} onPress={() => setForm({ ...form, cutoff: t })}>
-                          <Text style={[styles.cutoffOptionText, { color: form.cutoff === t ? "#B91C1C" : colors.mutedForeground }]}>{t}</Text>
-                        </TouchableOpacity>
-                      ))}
+
+                {/* Global Shipment Header */}
+                <View style={[styles.airHeaderCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+                  <Text style={[styles.airHeaderTitle, { color: colors.primary }]}>AIR EXPORT CARGO MARSHALLING REPORT</Text>
+                  <View style={styles.airHeaderGrid}>
+                    <View style={styles.airHeaderCol}>
+                      <FormRow label="Client">
+                        <TextInput style={[styles.formInput, { backgroundColor: colors.background, borderColor: colors.border, color: colors.foreground }]} placeholder="Client name" placeholderTextColor={colors.mutedForeground} value={form.customer} onChangeText={(v) => setForm({ ...form, customer: v })} />
+                      </FormRow>
+                      <FormRow label="HAWB">
+                        <TextInput style={[styles.formInput, { backgroundColor: colors.background, borderColor: colors.border, color: colors.foreground }]} placeholder="HAWB number" placeholderTextColor={colors.mutedForeground} value={form.hawb} onChangeText={(v) => setForm({ ...form, hawb: v })} />
+                      </FormRow>
+                      <FormRow label="Destination">
+                        <TextInput style={[styles.formInput, { backgroundColor: colors.background, borderColor: colors.border, color: colors.foreground }]} placeholder="Destination" placeholderTextColor={colors.mutedForeground} value={form.destination} onChangeText={(v) => setForm({ ...form, destination: v })} />
+                      </FormRow>
+                      <FormRow label="Description of Goods">
+                        <TextInput style={[styles.formInput, { backgroundColor: colors.background, borderColor: colors.border, color: colors.foreground }]} placeholder="Description of goods" placeholderTextColor={colors.mutedForeground} value={form.descriptionOfGoods} onChangeText={(v) => setForm({ ...form, descriptionOfGoods: v })} />
+                      </FormRow>
+                    </View>
+                    <View style={styles.airHeaderCol}>
+                      <FormRow label="Date">
+                        <TextInput style={[styles.formInput, { backgroundColor: colors.background, borderColor: colors.border, color: colors.foreground }]} placeholder="MM-DD-YY" placeholderTextColor={colors.mutedForeground} value={form.date} onChangeText={(v) => setForm({ ...form, date: v })} />
+                      </FormRow>
+                      <FormRow label="Quantity">
+                        <TextInput style={[styles.formInput, { backgroundColor: colors.background, borderColor: colors.border, color: colors.foreground }]} placeholder="Quantity" placeholderTextColor={colors.mutedForeground} value={form.qty} onChangeText={setFormQty} />
+                      </FormRow>
+                      <FormRow label="Dimension">
+                        <TextInput style={[styles.formInput, { backgroundColor: colors.background, borderColor: colors.border, color: colors.foreground }]} placeholder="L×W×H cm" placeholderTextColor={colors.mutedForeground} value={formatDim(form.dims)} editable={false} />
+                      </FormRow>
+                      <FormRow label="Actual Weight">
+                        <TextInput style={[styles.formInput, { backgroundColor: colors.background, borderColor: colors.border, color: colors.foreground }]} placeholder="kg" placeholderTextColor={colors.mutedForeground} value={form.weight} onChangeText={(v) => setForm({ ...form, weight: v })} />
+                      </FormRow>
                     </View>
                   </View>
-                </FormRow>
-                <FormRow label="MARKINGS / LABELS">
-                  <View style={styles.markingsGrid}>
-                    {MARKINGS_OPTIONS.map((m) => {
-                      const selected = form.selectedMarkings.includes(m);
-                      const cfg = MARKING_COLORS[m] ?? { bg: "#F1F5F9", text: "#475569", iconName: "tag" as const };
-                      return (
-                        <TouchableOpacity
-                          key={m}
-                          style={[styles.markingToggle, { backgroundColor: selected ? cfg.bg : colors.card, borderColor: selected ? cfg.text + "60" : colors.border }]}
-                          onPress={() => toggleMarking(m)}
-                        >
-                          <Icon name={cfg.iconName} size={12} color={selected ? cfg.text : colors.mutedForeground} />
-                          <Text style={[styles.markingToggleText, { color: selected ? cfg.text : colors.mutedForeground }]}>{m}</Text>
-                        </TouchableOpacity>
-                      );
-                    })}
+                </View>
+
+                {/* Step Indicator */}
+                <View style={[styles.stepIndicator, { backgroundColor: colors.card, borderColor: colors.border }]}>
+                  {[
+                    { label: "Pick up", role: "Client" },
+                    { label: "Warehouse In", role: "WH In" },
+                    { label: "Warehouse Out", role: "WH Out" },
+                    { label: "Acceptance", role: "Airline Rep" },
+                  ].map((s, idx) => {
+                    const active = form.airStep === idx;
+                    const complete = form.airStep > idx;
+                    return (
+                      <TouchableOpacity key={idx} style={[styles.stepPill, active && { backgroundColor: colors.primary, borderColor: colors.primary }, complete && { borderColor: colors.primary }]} onPress={() => setForm({ ...form, airStep: idx })}>
+                        <Text style={[styles.stepPillNumber, { color: active ? "#fff" : complete ? colors.primary : colors.mutedForeground }]}>{idx + 1}</Text>
+                        <View style={styles.stepPillText}>
+                          <Text style={[styles.stepPillLabel, { color: active ? "#fff" : complete ? colors.foreground : colors.mutedForeground }]}>{s.label}</Text>
+                          <Text style={[styles.stepPillRole, { color: active ? "rgba(255,255,255,0.8)" : colors.mutedForeground }]}>{s.role}</Text>
+                        </View>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+
+                {/* Step 1: Pick up at Client */}
+                {form.airStep === 0 && (
+                  <View style={[styles.stepCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+                    <View style={[styles.stepHeader, { borderBottomColor: colors.border }]}>
+                      <Text style={[styles.stepTitle, { color: colors.foreground }]}>Step 1 · Pick up at Client</Text>
+                      <View style={[styles.roleBadge, { backgroundColor: "#E8772220" }]}><Text style={[styles.roleBadgeText, { color: "#E87722" }]}>Driver</Text></View>
+                    </View>
+                    <View style={styles.stepBody}>
+                      <View style={styles.stepCol}>
+                        <FormRow label="ACCEPTANCE DETAILS">
+                          <CheckBox label="Good physical condition" checked={form.air.step1.goodPhysicalCondition} onToggle={() => toggleAirStep("step1", "goodPhysicalCondition")} />
+                          <CheckBox label="Labels/marking" checked={form.air.step1.labelsMarking} onToggle={() => toggleAirStep("step1", "labelsMarking")} />
+                        </FormRow>
+                        <FormRow label="REMARKS" style={{ marginTop: 8 }}>
+                          <TextInput style={[styles.formInput, { backgroundColor: colors.background, borderColor: colors.border, color: colors.foreground }]} placeholder="Fill up if condition is OK" placeholderTextColor={colors.mutedForeground} value={form.air.step1.remarks} onChangeText={(v) => updateAirStep("step1", "remarks", v)} />
+                        </FormRow>
+                        <FormRow label="WEATHER CONDITION" style={{ marginTop: 8 }}>
+                          <TextInput style={[styles.formInput, { backgroundColor: colors.background, borderColor: colors.border, color: colors.foreground }]} placeholder="e.g. Clear" placeholderTextColor={colors.mutedForeground} value={form.air.step1.weather} onChangeText={(v) => updateAirStep("step1", "weather", v)} />
+                        </FormRow>
+                        <FormRow label="YLPH DRIVER" style={{ marginTop: 8 }}>
+                          <TextInput style={[styles.formInput, { backgroundColor: colors.background, borderColor: colors.border, color: colors.foreground }]} placeholder="Driver name" placeholderTextColor={colors.mutedForeground} value={form.air.step1.ylphDriver} onChangeText={(v) => updateAirStep("step1", "ylphDriver", v)} />
+                        </FormRow>
+                      </View>
+                      <View style={styles.stepCol}>
+                        <FormRow label="ARRIVAL DATE">
+                          <TextInput style={[styles.formInput, { backgroundColor: colors.background, borderColor: colors.border, color: colors.foreground }]} placeholder="MM-DD-YY" placeholderTextColor={colors.mutedForeground} value={form.air.step1.arrivalDate} onChangeText={(v) => updateAirStep("step1", "arrivalDate", v)} />
+                        </FormRow>
+                        <FormRow label="ARRIVAL TIME" style={{ marginTop: 8 }}>
+                          <MilitaryTimeInput value={form.air.step1.arrivalTime} onChange={(v) => updateAirStep("step1", "arrivalTime", v)} />
+                        </FormRow>
+                      </View>
+                    </View>
                   </View>
-                </FormRow>
+                )}
+
+                {/* Step 2: Warehouse In */}
+                {form.airStep === 1 && (
+                  <View style={[styles.stepCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+                    <View style={[styles.stepHeader, { borderBottomColor: colors.border }]}>
+                      <Text style={[styles.stepTitle, { color: colors.foreground }]}>Step 2 · Warehouse In</Text>
+                      <View style={[styles.roleBadge, { backgroundColor: "#0A1F4C20" }]}><Text style={[styles.roleBadgeText, { color: "#0A1F4C" }]}>WH In</Text></View>
+                    </View>
+                    <View style={styles.stepBody}>
+                      <View style={styles.stepCol}>
+                        <FormRow label="ACCEPTANCE DETAILS">
+                          <CheckBox label="Good physical condition" checked={form.air.step2.goodPhysicalCondition} onToggle={() => toggleAirStep("step2", "goodPhysicalCondition")} />
+                          <CheckBox label="Labels/marking" checked={form.air.step2.labelsMarking} onToggle={() => toggleAirStep("step2", "labelsMarking")} />
+                        </FormRow>
+                        <FormRow label="REMARKS" style={{ marginTop: 8 }}>
+                          <TextInput style={[styles.formInput, { backgroundColor: colors.background, borderColor: colors.border, color: colors.foreground }]} placeholder="Fill up if condition is OK" placeholderTextColor={colors.mutedForeground} value={form.air.step2.remarks} onChangeText={(v) => updateAirStep("step2", "remarks", v)} />
+                        </FormRow>
+                        <FormRow label="WEATHER CONDITION" style={{ marginTop: 8 }}>
+                          <TextInput style={[styles.formInput, { backgroundColor: colors.background, borderColor: colors.border, color: colors.foreground }]} placeholder="e.g. Clear" placeholderTextColor={colors.mutedForeground} value={form.air.step2.weather} onChangeText={(v) => updateAirStep("step2", "weather", v)} />
+                        </FormRow>
+                      </View>
+                      <View style={styles.stepCol}>
+                        <FormRow label="DATE">
+                          <TextInput style={[styles.formInput, { backgroundColor: colors.background, borderColor: colors.border, color: colors.foreground }]} placeholder="MM-DD-YY" placeholderTextColor={colors.mutedForeground} value={form.air.step2.date} onChangeText={(v) => updateAirStep("step2", "date", v)} />
+                        </FormRow>
+                        <FormRow label="TIME" style={{ marginTop: 8 }}>
+                          <MilitaryTimeInput value={form.air.step2.time} onChange={(v) => updateAirStep("step2", "time", v)} />
+                        </FormRow>
+                        <FormRow label="QUANTITY" style={{ marginTop: 8 }}>
+                          <TextInput style={[styles.formInput, { backgroundColor: colors.background, borderColor: colors.border, color: colors.foreground }]} placeholder="0" placeholderTextColor={colors.mutedForeground} keyboardType="numeric" value={form.air.step2.quantity} onChangeText={(v) => updateAirStep("step2", "quantity", v)} />
+                        </FormRow>
+                        <FormRow label="DIGITAL STAMPS" style={{ marginTop: 8 }}>
+                          <View style={[styles.stampPanel, { backgroundColor: colors.background, borderColor: colors.border }]}>
+                            <TextInput style={[styles.formInput, { backgroundColor: colors.card, borderColor: colors.border, color: colors.foreground }]} placeholder="TLI Warehouse Rep" placeholderTextColor={colors.mutedForeground} value={form.air.step2.tliWarehouseRep} onChangeText={(v) => updateAirStep("step2", "tliWarehouseRep", v)} editable={!form.air.step2.repVerified} />
+                            <TextInput style={[styles.formInput, { marginTop: 8, backgroundColor: colors.card, borderColor: colors.border, color: colors.foreground }]} placeholder="YLPH Warehouse Rep" placeholderTextColor={colors.mutedForeground} value={form.air.step2.ylphWarehouseRep} onChangeText={(v) => updateAirStep("step2", "ylphWarehouseRep", v)} editable={!form.air.step2.repVerified} />
+                            <TouchableOpacity style={[styles.stampBtn, { backgroundColor: form.air.step2.repVerified ? "#059669" : colors.primary }]} onPress={stampReps} disabled={form.air.step2.repVerified}>
+                              <Text style={styles.stampBtnText}>{form.air.step2.repVerified ? "Verified" : "Rep Login / Verify"}</Text>
+                            </TouchableOpacity>
+                          </View>
+                        </FormRow>
+                      </View>
+                    </View>
+                  </View>
+                )}
+
+                {/* Step 3: Warehouse Out */}
+                {form.airStep === 2 && (
+                  <View style={[styles.stepCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+                    <View style={[styles.stepHeader, { borderBottomColor: colors.border }]}>
+                      <Text style={[styles.stepTitle, { color: colors.foreground }]}>Step 3 · Warehouse Out</Text>
+                      <View style={[styles.roleBadge, { backgroundColor: "#0A1F4C20" }]}><Text style={[styles.roleBadgeText, { color: "#0A1F4C" }]}>WH Out</Text></View>
+                    </View>
+                    <View style={styles.stepBody}>
+                      <View style={styles.stepCol}>
+                        <FormRow label="ACCEPTANCE DETAILS">
+                          <CheckBox label="Good physical condition" checked={form.air.step3.goodPhysicalCondition} onToggle={() => toggleAirStep("step3", "goodPhysicalCondition")} />
+                          <CheckBox label="Labels/marking" checked={form.air.step3.labelsMarking} onToggle={() => toggleAirStep("step3", "labelsMarking")} />
+                        </FormRow>
+                        <FormRow label="REMARKS" style={{ marginTop: 8 }}>
+                          <TextInput style={[styles.formInput, { backgroundColor: colors.background, borderColor: colors.border, color: colors.foreground }]} placeholder="Fill up if condition is OK" placeholderTextColor={colors.mutedForeground} value={form.air.step3.remarks} onChangeText={(v) => updateAirStep("step3", "remarks", v)} />
+                        </FormRow>
+                        <FormRow label="WEATHER CONDITION" style={{ marginTop: 8 }}>
+                          <TextInput style={[styles.formInput, { backgroundColor: colors.background, borderColor: colors.border, color: colors.foreground }]} placeholder="e.g. Clear" placeholderTextColor={colors.mutedForeground} value={form.air.step3.weather} onChangeText={(v) => updateAirStep("step3", "weather", v)} />
+                        </FormRow>
+                      </View>
+                      <View style={styles.stepCol}>
+                        <FormRow label="DATE">
+                          <TextInput style={[styles.formInput, { backgroundColor: colors.background, borderColor: colors.border, color: colors.foreground }]} placeholder="MM-DD-YY" placeholderTextColor={colors.mutedForeground} value={form.air.step3.date} onChangeText={(v) => updateAirStep("step3", "date", v)} />
+                        </FormRow>
+                        <FormRow label="TIME" style={{ marginTop: 8 }}>
+                          <MilitaryTimeInput value={form.air.step3.time} onChange={(v) => updateAirStep("step3", "time", v)} />
+                        </FormRow>
+                        <FormRow label="QUANTITY" style={{ marginTop: 8 }}>
+                          <TextInput style={[styles.formInput, { backgroundColor: colors.background, borderColor: colors.border, color: colors.foreground }]} placeholder="0" placeholderTextColor={colors.mutedForeground} keyboardType="numeric" value={form.air.step3.quantity} onChangeText={(v) => updateAirStep("step3", "quantity", v)} />
+                        </FormRow>
+                        <FormRow label="RELEASE DIGITAL STAMP" style={{ marginTop: 8 }}>
+                          <View style={[styles.stampPanel, { backgroundColor: colors.background, borderColor: colors.border }]}>
+                            <TextInput style={[styles.formInput, { backgroundColor: colors.card, borderColor: colors.border, color: colors.foreground }]} placeholder="Warehouse Rep" placeholderTextColor={colors.mutedForeground} value={form.air.step3.warehouseRep} onChangeText={(v) => updateAirStep("step3", "warehouseRep", v)} />
+                            <TouchableOpacity style={[styles.stampBtn, { backgroundColor: form.air.step3.warehouseRep ? "#059669" : colors.primary }]} onPress={verifyStep3Rep}>
+                              <Text style={styles.stampBtnText}>{form.air.step3.warehouseRep ? "Stamped" : "Verify & Stamp"}</Text>
+                            </TouchableOpacity>
+                          </View>
+                        </FormRow>
+                      </View>
+                    </View>
+                  </View>
+                )}
+
+                {/* Step 4: Acceptance by YLPH Airlines Representative */}
+                {form.airStep === 3 && (
+                  <View style={[styles.stepCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+                    <View style={[styles.stepHeader, { borderBottomColor: colors.border }]}>
+                      <Text style={[styles.stepTitle, { color: colors.foreground }]}>Step 4 · Acceptance by YLPH Airlines Representative</Text>
+                      <View style={[styles.roleBadge, { backgroundColor: "#E8772220" }]}><Text style={[styles.roleBadgeText, { color: "#E87722" }]}>Airline Rep</Text></View>
+                    </View>
+                    <View style={styles.stepBody}>
+                      <View style={styles.stepCol}>
+                        <FormRow label="MAWB">
+                          <TextInput style={[styles.formInput, { backgroundColor: colors.background, borderColor: colors.border, color: colors.foreground }]} placeholder="MAWB number" placeholderTextColor={colors.mutedForeground} value={form.air.step4.mawb} onChangeText={(v) => updateAirStep("step4", "mawb", v)} />
+                        </FormRow>
+                        <FormRow label="ACCEPTANCE DETAILS" style={{ marginTop: 8 }}>
+                          <CheckBox label="Good physical condition" checked={form.air.step4.goodPhysicalCondition} onToggle={() => toggleAirStep("step4", "goodPhysicalCondition")} />
+                          <CheckBox label="Labels/marking" checked={form.air.step4.labelsMarking} onToggle={() => toggleAirStep("step4", "labelsMarking")} />
+                        </FormRow>
+                        <FormRow label="REMARKS" style={{ marginTop: 8 }}>
+                          <TextInput style={[styles.formInput, { backgroundColor: colors.background, borderColor: colors.border, color: colors.foreground }]} placeholder="Fill up if condition is OK" placeholderTextColor={colors.mutedForeground} value={form.air.step4.remarks} onChangeText={(v) => updateAirStep("step4", "remarks", v)} />
+                        </FormRow>
+                        <FormRow label="WEATHER CONDITION" style={{ marginTop: 8 }}>
+                          <TextInput style={[styles.formInput, { backgroundColor: colors.background, borderColor: colors.border, color: colors.foreground }]} placeholder="e.g. Clear" placeholderTextColor={colors.mutedForeground} value={form.air.step4.weather} onChangeText={(v) => updateAirStep("step4", "weather", v)} />
+                        </FormRow>
+                      </View>
+                      <View style={styles.stepCol}>
+                        <FormRow label="DATE">
+                          <TextInput style={[styles.formInput, { backgroundColor: colors.background, borderColor: colors.border, color: colors.foreground }]} placeholder="MM-DD-YY" placeholderTextColor={colors.mutedForeground} value={form.air.step4.date} onChangeText={(v) => updateAirStep("step4", "date", v)} />
+                        </FormRow>
+                        <FormRow label="TIME" style={{ marginTop: 8 }}>
+                          <MilitaryTimeInput value={form.air.step4.time} onChange={(v) => updateAirStep("step4", "time", v)} />
+                        </FormRow>
+                        <FormRow label="QUANTITY" style={{ marginTop: 8 }}>
+                          <TextInput style={[styles.formInput, { backgroundColor: colors.background, borderColor: colors.border, color: colors.foreground }]} placeholder="0" placeholderTextColor={colors.mutedForeground} keyboardType="numeric" value={form.air.step4.quantity} onChangeText={(v) => updateAirStep("step4", "quantity", v)} />
+                        </FormRow>
+                        <FormRow label="AIRLINE REP DIGITAL STAMP" style={{ marginTop: 8 }}>
+                          <View style={[styles.stampPanel, { backgroundColor: colors.background, borderColor: colors.border }]}>
+                            <TextInput style={[styles.formInput, { backgroundColor: colors.card, borderColor: colors.border, color: colors.foreground }]} placeholder="Airline Representative" placeholderTextColor={colors.mutedForeground} value={form.air.step4.airlineRep} onChangeText={(v) => updateAirStep("step4", "airlineRep", v)} />
+                            <TouchableOpacity style={[styles.stampBtn, { backgroundColor: form.air.step4.airlineRep ? "#059669" : colors.primary }]} onPress={verifyStep4Rep}>
+                              <Text style={styles.stampBtnText}>{form.air.step4.airlineRep ? "Stamped" : "Verify & Stamp"}</Text>
+                            </TouchableOpacity>
+                          </View>
+                        </FormRow>
+                      </View>
+                    </View>
+                  </View>
+                )}
+
+                {/* Step Navigation */}
+                <View style={[styles.stepNav, { borderTopColor: colors.border }]}>
+                  <TouchableOpacity style={[styles.stepNavBtn, { borderColor: colors.border }]} onPress={() => setForm({ ...form, airStep: Math.max(0, form.airStep - 1) })} disabled={form.airStep === 0}>
+                    <Text style={[styles.stepNavText, { color: form.airStep === 0 ? colors.mutedForeground : colors.foreground }]}>Previous</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={[styles.stepNavBtn, { backgroundColor: colors.primary }]} onPress={() => setForm({ ...form, airStep: Math.min(3, form.airStep + 1) })} disabled={form.airStep === 3}>
+                    <Text style={[styles.stepNavText, { color: "#fff" }]}>Next</Text>
+                  </TouchableOpacity>
+                </View>
               </View>
             </Animated.View>
+
 
             {/* Auto-fill fields */}
             <FormRow label="TRUCKER APP NO.">
@@ -953,6 +1336,37 @@ function FormRow({ label, children, style }: { label: string; children: React.Re
   );
 }
 
+function CheckBox({ label, checked, onToggle }: { label: string; checked: boolean; onToggle: () => void }) {
+  const colors = useColors();
+  return (
+    <TouchableOpacity
+      onPress={onToggle}
+      activeOpacity={0.8}
+      style={[styles.checkRow, { borderColor: checked ? colors.primary : colors.border }]}
+    >
+      <View style={[styles.checkBox, { borderColor: checked ? colors.primary : colors.border, backgroundColor: checked ? colors.primary : "transparent" }]}>
+        {checked && <Icon name="check" size={12} color="#fff" />}
+      </View>
+      <Text style={[styles.checkLabel, { color: checked ? colors.foreground : colors.mutedForeground }]}>{label}</Text>
+    </TouchableOpacity>
+  );
+}
+
+function MilitaryTimeInput({ value, onChange, placeholder = "1300h" }: { value: string; onChange: (v: string) => void; placeholder?: string }) {
+  const colors = useColors();
+  return (
+    <TextInput
+      style={[styles.formInput, { backgroundColor: colors.card, borderColor: colors.border, color: colors.foreground }]}
+      placeholder={placeholder}
+      placeholderTextColor={colors.mutedForeground}
+      value={value}
+      onChangeText={(v) => onChange(formatMilitaryTime(v))}
+      keyboardType="numeric"
+      maxLength={5}
+    />
+  );
+}
+
 const styles = StyleSheet.create({
   root: { flex: 1 },
   header: { flexDirection: "row", alignItems: "flex-end", justifyContent: "space-between", paddingHorizontal: 20, paddingBottom: 16, borderBottomWidth: 1 },
@@ -1042,6 +1456,32 @@ const styles = StyleSheet.create({
   airBlock: { borderRadius: 12, borderWidth: 1, padding: 14, gap: 12 },
   airBlockHeader: { flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 4 },
   airBlockTitle: { fontSize: 13, fontWeight: "700" as const },
+  airHeaderCard: { borderRadius: 12, borderWidth: 1, padding: 14, gap: 12 },
+  airHeaderTitle: { fontSize: 13, fontWeight: "700" as const, textAlign: "center", letterSpacing: 0.5 },
+  airHeaderGrid: { flexDirection: "row", gap: 10 },
+  airHeaderCol: { flex: 1, gap: 8 },
+  stepIndicator: { flexDirection: "row", gap: 8, borderRadius: 12, borderWidth: 1, padding: 10 },
+  stepPill: { flex: 1, flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 8, paddingVertical: 8, borderRadius: 10, borderWidth: 1, borderColor: "transparent" },
+  stepPillNumber: { width: 24, height: 24, borderRadius: 12, textAlign: "center", lineHeight: 24, fontSize: 13, fontWeight: "700" as const },
+  stepPillText: { flex: 1 },
+  stepPillLabel: { fontSize: 11, fontWeight: "600" as const },
+  stepPillRole: { fontSize: 9, fontWeight: "500" as const, marginTop: 1 },
+  stepCard: { borderRadius: 12, borderWidth: 1, overflow: "hidden" },
+  stepHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", padding: 12, borderBottomWidth: 1 },
+  stepTitle: { fontSize: 13, fontWeight: "700" as const },
+  roleBadge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 },
+  roleBadgeText: { fontSize: 10, fontWeight: "700" as const },
+  stepBody: { flexDirection: "row", gap: 10, padding: 12 },
+  stepCol: { flex: 1, gap: 8 },
+  checkRow: { flexDirection: "row", alignItems: "center", gap: 8, paddingVertical: 8 },
+  checkBox: { width: 18, height: 18, borderRadius: 4, borderWidth: 1.5, alignItems: "center", justifyContent: "center" },
+  checkLabel: { fontSize: 12, fontWeight: "500" as const, flex: 1 },
+  stampPanel: { borderRadius: 10, borderWidth: 1, padding: 12, gap: 8 },
+  stampBtn: { paddingVertical: 12, borderRadius: 10, alignItems: "center" },
+  stampBtnText: { color: "#fff", fontSize: 13, fontWeight: "700" as const },
+  stepNav: { flexDirection: "row", gap: 10, paddingTop: 12, borderTopWidth: 1 },
+  stepNavBtn: { flex: 1, paddingVertical: 12, borderRadius: 10, borderWidth: 1, alignItems: "center" },
+  stepNavText: { fontSize: 14, fontWeight: "600" as const },
   cutoffInputRow: { borderRadius: 10, borderWidth: 1, padding: 12, gap: 10 },
   cutoffInputValue: { fontSize: 22, fontWeight: "700" as const, letterSpacing: 1 },
   cutoffBtns: { flexDirection: "row", gap: 8 },
