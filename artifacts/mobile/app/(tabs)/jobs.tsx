@@ -289,7 +289,7 @@ export default function JobsScreen() {
       step3: {
         goodPhysicalCondition: false,
         labelsMarking: false,
-        remarks: "ok",
+        remarks: "Ok",
         remarksChecked: false,
         weather: "",
         date: "",
@@ -302,7 +302,7 @@ export default function JobsScreen() {
         mawb: manifest.mawb !== "N/A" ? manifest.mawb : "",
         goodPhysicalCondition: false,
         labelsMarking: false,
-        remarks: "ok",
+        remarks: "Ok",
         remarksChecked: false,
         weather: "",
         date: "",
@@ -373,7 +373,6 @@ export default function JobsScreen() {
         year: "numeric",
       });
       const airRemarks = [
-        formData.air.step1.remarks,
         formData.air.step2.remarks,
         formData.air.step3.remarks,
         formData.air.step4.remarks,
@@ -448,7 +447,6 @@ export default function JobsScreen() {
         year: "numeric",
       });
       const airRemarks = [
-        formData.air.step1.remarks,
         formData.air.step2.remarks,
         formData.air.step3.remarks,
         formData.air.step4.remarks,
