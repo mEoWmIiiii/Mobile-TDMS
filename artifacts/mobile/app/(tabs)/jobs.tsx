@@ -283,8 +283,7 @@ export default function JobsScreen() {
         date: "",
         time: "",
         quantity: "",
-        tliWarehouseRep: "",
-        ylphWarehouseRep: "",
+        warehouseRep: "",
         repVerified: false,
       },
       step3: {
@@ -397,7 +396,7 @@ export default function JobsScreen() {
         mode: formData.mode,
         status: existingStatus,
         date: formData.date || today,
-        remarks: airRemarks || formData.remarks || undefined,
+        remarks: airRemarks || undefined,
       };
 
       const updatedManifest: Manifest & { qtyUnit?: QtyUnit } = {
@@ -472,7 +471,7 @@ export default function JobsScreen() {
         mode: formData.mode,
         status: "CONFIRMED",
         date: formData.date || today,
-        remarks: airRemarks || formData.remarks || undefined,
+        remarks: airRemarks || undefined,
       };
 
       const newManifest: Manifest & { qtyUnit?: QtyUnit } = {

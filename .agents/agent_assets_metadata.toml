@@ -47,3 +47,9 @@ id = "2aR0MauI9UzDLYhIV0q8N"
 uri = "file://screenshots/verify/jobs-form-grid.jpg"
 type = "image"
 title = "TDMS Mobile — Job Bookings (form grid updated in New Booking modal)"
+
+[[outputs]]
+id = "KjDqmGhqdt_5b8VUzMiyi"
+uri = "file://screenshots/verify/jobs-stamps-remarks.jpg"
+type = "image"
+title = "TDMS Mobile — Job Bookings (stamp toggle + Step 2 cleanup + global remarks removed)"
