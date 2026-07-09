@@ -53,3 +53,9 @@ id = "KjDqmGhqdt_5b8VUzMiyi"
 uri = "file://screenshots/verify/jobs-stamps-remarks.jpg"
 type = "image"
 title = "TDMS Mobile — Job Bookings (stamp toggle + Step 2 cleanup + global remarks removed)"
+
+[[outputs]]
+id = "9-1TWti8kzBiNuGRLBM5a"
+uri = "file://screenshots/verify/jobs-material3.jpg"
+type = "image"
+title = "TDMS Mobile — Jobs list after Material 3 form refactor"

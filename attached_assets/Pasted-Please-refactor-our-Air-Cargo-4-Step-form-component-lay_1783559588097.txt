@@ -1,0 +1,22 @@
+Please refactor our Air Cargo 4-Step form component layout and its custom styles inline. We want to convert the messy layout into a clean, professional, enterprise-grade mobile interface adhering to Material Design 3 spacing and grid alignment principles.
+
+Apply these precise UI, layout, and style rules:
+
+1. Standardize Text Fields & Inputs (Material 3 Specs):
+- For all text input boxes, enforce a fixed height of exactly 52dp to 56dp to serve as clear touch targets.
+- Give inputs a clean, soft background color (#F8FAFC), a subtle border (#CBD5E1), and a 'borderRadius: 8'.
+- Move all field text labels directly ABOVE their corresponding input boxes. Style the labels to be small, clean, and distinct (e.g., fontSize: 12, fontWeight: '600', color: '#64748B') with a small 'marginBottom: 6' spacer so they never blend into the input box.
+
+2. Strict Proportional Dual-Column Row Grid:
+- In Step 1 and across all steps, group side-by-side elements (like Acceptance Details on the left and Arrival Date/Time on the right) into strict horizontal row containers ('flexDirection: "row"', 'justifyContent: "space-between"', 'alignItems: "flex-start"').
+- Assign the left-side field container and right-side field container an explicit width of exactly '48%' each. This prevents data from sliding out of place and creates a perfectly flush, balanced vertical alignment axis down both sides of the screen.
+
+3. Structural Grouping Using Workflow Cards:
+- Wrap distinct operational blocks within each step (such as the Checklist, the Time/Date logs, and the Digital Verification Stamp panels) inside their own isolated section cards ('backgroundColor: "#FFFFFF"', 'borderRadius: 12', 'padding: 16', 'marginBottom: 16', with a very faint border or shadow). This breaks the massive wall of forms into clean, scannable steps.
+
+4. Decompress the Step Progress Tracker Banner:
+- Strip away the heavy margins and internal card padding compressing the top 1-to-4 horizontal step numbers. 
+- Set the step progress tracker row to 'width: "100%"', 'flexDirection: "row"', and 'justifyContent: "space-between"' so that the numbers and their short text labels span comfortably across the screen width without text wrapping awkwardly into vertical lines.
+
+5. Safe Scroll View padding:
+- Set 'contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 160 }}' on the main form ScrollView container. This allows users to comfortably scroll all fields, checklists, and stamps entirely past the sticky bottom footer action bar.
