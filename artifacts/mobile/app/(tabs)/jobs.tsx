@@ -373,6 +373,7 @@ export default function JobsScreen() {
         year: "numeric",
       });
       const airRemarks = [
+        formData.air.step1.remarks,
         formData.air.step2.remarks,
         formData.air.step3.remarks,
         formData.air.step4.remarks,
@@ -447,6 +448,7 @@ export default function JobsScreen() {
         year: "numeric",
       });
       const airRemarks = [
+        formData.air.step1.remarks,
         formData.air.step2.remarks,
         formData.air.step3.remarks,
         formData.air.step4.remarks,

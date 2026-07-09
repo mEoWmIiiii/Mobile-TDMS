@@ -200,23 +200,41 @@ export function NewBookingForm({ visible, isEditMode = false, initialData, onSub
   <StepCard title="Step 1 · Pick up at Client" role="Driver" roleBg="#E8772220" roleText="#E87722">
     
       <View style={styles.stepCol}>
-        <WorkflowCard title="Conditions">
-          <StepFormRow label="WEATHER CONDITION">
-            <TextInput style={[styles.formInput, inputStyle(colors, false, isStepLocked(0))]} value={form.air.step1.weather} onChangeText={(v) => updateAirStep("step1", "weather", v)} editable={!isStepLocked(0)} />
+        <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 12 }}>
+          <StepFormRow label="ARRIVAL DATE" style={{ width: "48%" }}>
+            <TextInput style={[styles.formInput, inputStyle(colors, false, isStepLocked(0))]} value={form.air.step1.arrivalDate} onChangeText={(v) => updateAirStep("step1", "arrivalDate", v)} editable={!isStepLocked(0)} />
           </StepFormRow>
-          <StepFormRow label="YLPH DRIVER">
-            <TextInput style={[styles.formInput, inputStyle(colors, false, isStepLocked(0))]} value={form.air.step1.ylphDriver} onChangeText={(v) => updateAirStep("step1", "ylphDriver", v)} editable={!isStepLocked(0)} />
+          <StepFormRow label="ARRIVAL TIME" style={{ width: "48%" }}>
+            <MilitaryTimeInput value={form.air.step1.arrivalTime} onChange={(v) => updateAirStep("step1", "arrivalTime", v)} editable={!isStepLocked(0)} />
           </StepFormRow>
-        </WorkflowCard>
+        </View>
+        <FormRow label="DESCRIPTION OF GOODS">
+          <TextInput style={[styles.formInput, inputStyle(colors, false, true)]} value={form.descriptionOfGoods} editable={false} />
+        </FormRow>
+        <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 12 }}>
+          <StepFormRow label="QUANTITY" style={{ width: "48%" }}>
+            <TextInput style={[styles.formInput, inputStyle(colors, false, isStepLocked(0))]} keyboardType="numeric" value={form.qty} onChangeText={setFormQty} editable={!isStepLocked(0)} />
+          </StepFormRow>
+          <StepFormRow label="DIMENSIONS" style={{ width: "48%" }}>
+            <TextInput style={[styles.formInput, inputStyle(colors, false, true)]} value={formatDim(form.dims)} editable={false} />
+          </StepFormRow>
+        </View>
+        <StepFormRow label="WEATHER CONDITION">
+          <TextInput style={[styles.formInput, inputStyle(colors, false, isStepLocked(0))]} value={form.air.step1.weather} onChangeText={(v) => updateAirStep("step1", "weather", v)} editable={!isStepLocked(0)} />
+        </StepFormRow>
+        <StepFormRow label="YLPH DRIVER">
+          <TextInput style={[styles.formInput, inputStyle(colors, false, isStepLocked(0))]} value={form.air.step1.ylphDriver} onChangeText={(v) => updateAirStep("step1", "ylphDriver", v)} editable={!isStepLocked(0)} />
+        </StepFormRow>
       </View>
       <View style={styles.stepCol}>
-        <WorkflowCard title="Pickup Verification">
-          <StepFormRow label="PICKUP VERIFICATION">
-            <TouchableOpacity style={[styles.stampBtn, { backgroundColor: form.air.step1.pickupVerified ? "#059669" : colors.primary, opacity: isStepLocked(0) && form.airStep !== 0 ? 0.6 : 1 }]} onPress={() => updateAirStep("step1", "pickupVerified", !form.air.step1.pickupVerified)} disabled={isStepLocked(0) && form.airStep !== 0}>
-              <Text style={styles.stampBtnText}>{form.air.step1.pickupVerified ? "Pickup Confirmed" : "Confirm Pickup"}</Text>
-            </TouchableOpacity>
-          </StepFormRow>
-        </WorkflowCard>
+        <Text style={[styles.sectionTitle, { color: "#64748B" }]}>Acceptance Details</Text>
+        <CheckBox label="Good physical condition" checked={form.air.step1.goodPhysicalCondition} onToggle={() => toggleAirStep("step1", "goodPhysicalCondition")} disabled={isStepLocked(0)} />
+        <CheckBox label="Labels/marking" checked={form.air.step1.labelsMarking} onToggle={() => toggleAirStep("step1", "labelsMarking")} disabled={isStepLocked(0)} />
+        <CheckBox label="Add Remarks" checked={form.air.step1.remarksChecked} onToggle={() => toggleRemarksChecked("step1")} disabled={isStepLocked(0)} />
+        <TextInput style={[styles.formInput, inputStyle(colors), { marginTop: 8, opacity: form.air.step1.remarksChecked && !isStepLocked(0) ? 1 : 0.6 }]} value={form.air.step1.remarks} onChangeText={(v) => updateAirStep("step1", "remarks", v)} editable={form.air.step1.remarksChecked && !isStepLocked(0)} placeholder="Enter remarks..." />
+        <TouchableOpacity style={[styles.stampBtn, { marginTop: 12, backgroundColor: form.air.step1.pickupVerified ? "#059669" : colors.primary, opacity: isStepLocked(0) && form.airStep !== 0 ? 0.6 : 1 }]} onPress={() => updateAirStep("step1", "pickupVerified", !form.air.step1.pickupVerified)} disabled={isStepLocked(0) && form.airStep !== 0}>
+          <Text style={styles.stampBtnText}>{form.air.step1.pickupVerified ? "Pickup Confirmed" : "Confirm Pickup"}</Text>
+        </TouchableOpacity>
       </View>
     
   </StepCard>
@@ -225,6 +243,14 @@ export function NewBookingForm({ visible, isEditMode = false, initialData, onSub
   <StepCard title="Step 2 · Warehouse In" role="WH In" roleBg="#0A1F4C20" roleText="#0A1F4C">
     
       <View style={styles.stepCol}>
+        <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 12 }}>
+          <StepFormRow label="DATE" style={{ width: "48%" }}>
+            <TextInput style={[styles.formInput, inputStyle(colors, false, isStepLocked(1))]} value={form.air.step2.date} onChangeText={(v) => updateAirStep("step2", "date", v)} editable={!isStepLocked(1)} />
+          </StepFormRow>
+          <StepFormRow label="TIME" style={{ width: "48%" }}>
+            <MilitaryTimeInput value={form.air.step2.time} onChange={(v) => updateAirStep("step2", "time", v)} editable={!isStepLocked(1)} />
+          </StepFormRow>
+        </View>
         <Text style={[styles.sectionTitle, { color: "#64748B" }]}>Acceptance Details</Text>
         <CheckBox label="Good physical condition" checked={form.air.step2.goodPhysicalCondition} onToggle={() => toggleAirStep("step2", "goodPhysicalCondition")} disabled={isStepLocked(1)} />
         <CheckBox label="Labels/marking" checked={form.air.step2.labelsMarking} onToggle={() => toggleAirStep("step2", "labelsMarking")} disabled={isStepLocked(1)} />
@@ -245,6 +271,14 @@ export function NewBookingForm({ visible, isEditMode = false, initialData, onSub
   <StepCard title="Step 3 · Warehouse Out" role="WH Out" roleBg="#0A1F4C20" roleText="#0A1F4C">
     
       <View style={styles.stepCol}>
+        <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 12 }}>
+          <StepFormRow label="DATE" style={{ width: "48%" }}>
+            <TextInput style={[styles.formInput, inputStyle(colors, false, isStepLocked(2))]} value={form.air.step3.date} onChangeText={(v) => updateAirStep("step3", "date", v)} editable={!isStepLocked(2)} />
+          </StepFormRow>
+          <StepFormRow label="TIME" style={{ width: "48%" }}>
+            <MilitaryTimeInput value={form.air.step3.time} onChange={(v) => updateAirStep("step3", "time", v)} editable={!isStepLocked(2)} />
+          </StepFormRow>
+        </View>
         <Text style={[styles.sectionTitle, { color: "#64748B" }]}>Acceptance Details</Text>
         <CheckBox label="Good physical condition" checked={form.air.step3.goodPhysicalCondition} onToggle={() => toggleAirStep("step3", "goodPhysicalCondition")} disabled={isStepLocked(2)} />
         <CheckBox label="Labels/marking" checked={form.air.step3.labelsMarking} onToggle={() => toggleAirStep("step3", "labelsMarking")} disabled={isStepLocked(2)} />
@@ -265,6 +299,14 @@ export function NewBookingForm({ visible, isEditMode = false, initialData, onSub
   <StepCard title="Step 4 · Acceptance by YLPH Airlines Representative" role="Airline Rep" roleBg="#E8772220" roleText="#E87722">
     
       <View style={styles.stepCol}>
+        <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 12 }}>
+          <StepFormRow label="DATE" style={{ width: "48%" }}>
+            <TextInput style={[styles.formInput, inputStyle(colors, false, isStepLocked(3))]} value={form.air.step4.date} onChangeText={(v) => updateAirStep("step4", "date", v)} editable={!isStepLocked(3)} />
+          </StepFormRow>
+          <StepFormRow label="TIME" style={{ width: "48%" }}>
+            <MilitaryTimeInput value={form.air.step4.time} onChange={(v) => updateAirStep("step4", "time", v)} editable={!isStepLocked(3)} />
+          </StepFormRow>
+        </View>
         <Text style={[styles.sectionTitle, { color: "#64748B" }]}>MAWB</Text>
         <TextInput style={[styles.formInput, inputStyle(colors, false, isStepLocked(3))]} value={form.air.step4.mawb} onChangeText={(v) => updateAirStep("step4", "mawb", v)} editable={!isStepLocked(3)} />
         <Text style={[styles.sectionTitle, { color: "#64748B", marginTop: 12 }]}>Acceptance Details</Text>
