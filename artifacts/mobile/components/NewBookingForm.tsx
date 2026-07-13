@@ -1651,8 +1651,8 @@ const inputStyle = (
   _card = true,
   dimmed = false,
 ) => ({
-  backgroundColor: "#F8FAFC",
-  borderColor: "#CBD5E1",
+  backgroundColor: colors.input,
+  borderColor: colors.border,
   color: colors.foreground,
   opacity: dimmed ? 0.6 : 1,
 });
