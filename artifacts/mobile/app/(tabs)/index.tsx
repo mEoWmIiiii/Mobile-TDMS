@@ -71,7 +71,7 @@ export default function DashboardScreen() {
 
   return (
     <View style={[styles.root, { backgroundColor: colors.background }]}>
-      <View style={[styles.header, { paddingTop: topPad + 12, backgroundColor: colors.card, borderBottomColor: colors.border }]}>
+      <View style={[styles.header, { paddingTop: topPad + 4, backgroundColor: colors.card, borderBottomColor: colors.border }]}>
         <View>
           <Text style={[styles.subtitle, { color: colors.mutedForeground }]}>OPERATIONS</Text>
           <Text style={[styles.title, { color: colors.foreground }]}>Dashboard</Text>

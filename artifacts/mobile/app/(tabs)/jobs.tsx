@@ -914,7 +914,7 @@ export default function JobsScreen() {
         style={[
           styles.header,
           {
-            paddingTop: topPad + 12,
+            paddingTop: topPad + 4,
             backgroundColor: colors.card,
             borderBottomColor: colors.border,
           },

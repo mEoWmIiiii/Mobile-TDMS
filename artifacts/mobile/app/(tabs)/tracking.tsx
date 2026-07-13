@@ -57,7 +57,7 @@ export default function TrackingScreen() {
 
   return (
     <View style={[styles.root, { backgroundColor: colors.background }]}>
-      <View style={[styles.header, { paddingTop: topPad + 12, backgroundColor: colors.card, borderBottomColor: colors.border }]}>
+      <View style={[styles.header, { paddingTop: topPad + 4, backgroundColor: colors.card, borderBottomColor: colors.border }]}>
         <View>
           <Text style={[styles.headerSub, { color: colors.mutedForeground }]}>TELEMATICS</Text>
           <Text style={[styles.headerTitle, { color: colors.foreground }]}>Live Tracking</Text>
