@@ -269,7 +269,8 @@ export function NewBookingForm({
     if (form.air.step1.pickupVerified) return 1;
     return 0;
   }, [form.air]);
-  const isStepLocked = (idx: number) => idx < operationalPhase;
+  const isAirStepEditable = (idx: number) =>
+    idx === operationalPhase && operationalPhase < 4;
 
   const setMode = (mode: "Land" | "Air") => {
     setForm((f) => ({ ...f, mode }));
@@ -704,7 +705,6 @@ export function NewBookingForm({
               ].map((s, idx) => {
                 const active = form.airStep === idx;
                 const complete = form.airStep > idx;
-                const locked = isStepLocked(idx);
                 return (
                   <TouchableOpacity
                     key={idx}
@@ -715,9 +715,7 @@ export function NewBookingForm({
                         borderColor: colors.primary,
                       },
                       complete && { borderColor: colors.primary },
-                      locked && { opacity: 0.45 },
                     ]}
-                    disabled={locked}
                     onPress={() => setForm({ ...form, airStep: idx })}
                   >
                     <Text
@@ -787,13 +785,13 @@ export function NewBookingForm({
                       <TextInput
                         style={[
                           styles.formInput,
-                          inputStyle(colors, false, isStepLocked(0)),
+                          inputStyle(colors, false, !isAirStepEditable(0)),
                         ]}
                         value={form.air.step1.arrivalDate}
                         onChangeText={(v) =>
                           updateAirStep("step1", "arrivalDate", v)
                         }
-                        editable={!isStepLocked(0)}
+                        editable={isAirStepEditable(0)}
                       />
                     </StepFormRow>
                     <StepFormRow label="ARRIVAL TIME" style={{ width: "48%" }}>
@@ -802,7 +800,7 @@ export function NewBookingForm({
                         onChange={(v) =>
                           updateAirStep("step1", "arrivalTime", v)
                         }
-                        editable={!isStepLocked(0)}
+                        editable={isAirStepEditable(0)}
                       />
                     </StepFormRow>
                   </View>
@@ -827,12 +825,12 @@ export function NewBookingForm({
                       <TextInput
                         style={[
                           styles.formInput,
-                          inputStyle(colors, false, isStepLocked(0)),
+                          inputStyle(colors, false, !isAirStepEditable(0)),
                         ]}
                         keyboardType="numeric"
                         value={form.qty}
                         onChangeText={setFormQty}
-                        editable={!isStepLocked(0)}
+                        editable={isAirStepEditable(0)}
                       />
                     </StepFormRow>
                     <StepFormRow label="DIMENSIONS" style={{ width: "48%" }}>
@@ -850,24 +848,24 @@ export function NewBookingForm({
                     <TextInput
                       style={[
                         styles.formInput,
-                        inputStyle(colors, false, isStepLocked(0)),
+                        inputStyle(colors, false, !isAirStepEditable(0)),
                       ]}
                       value={form.air.step1.weather}
                       onChangeText={(v) => updateAirStep("step1", "weather", v)}
-                      editable={!isStepLocked(0)}
+                      editable={isAirStepEditable(0)}
                     />
                   </StepFormRow>
                   <StepFormRow label="YLPH DRIVER">
                     <TextInput
                       style={[
                         styles.formInput,
-                        inputStyle(colors, false, isStepLocked(0)),
+                        inputStyle(colors, false, !isAirStepEditable(0)),
                       ]}
                       value={form.air.step1.ylphDriver}
                       onChangeText={(v) =>
                         updateAirStep("step1", "ylphDriver", v)
                       }
-                      editable={!isStepLocked(0)}
+                      editable={isAirStepEditable(0)}
                     />
                   </StepFormRow>
                 </View>
@@ -881,19 +879,19 @@ export function NewBookingForm({
                     onToggle={() =>
                       toggleAirStep("step1", "goodPhysicalCondition")
                     }
-                    disabled={isStepLocked(0)}
+                    disabled={!isAirStepEditable(0)}
                   />
                   <CheckBox
                     label="Labels/marking"
                     checked={form.air.step1.labelsMarking}
                     onToggle={() => toggleAirStep("step1", "labelsMarking")}
-                    disabled={isStepLocked(0)}
+                    disabled={!isAirStepEditable(0)}
                   />
                   <CheckBox
                     label="Add Remarks"
                     checked={form.air.step1.remarksChecked}
                     onToggle={() => toggleRemarksChecked("step1")}
-                    disabled={isStepLocked(0)}
+                    disabled={!isAirStepEditable(0)}
                   />
                   <TextInput
                     style={[
@@ -902,14 +900,14 @@ export function NewBookingForm({
                       {
                         marginTop: 8,
                         opacity:
-                          form.air.step1.remarksChecked && !isStepLocked(0)
+                          form.air.step1.remarksChecked && isAirStepEditable(0)
                             ? 1
                             : 0.6,
                       },
                     ]}
                     value={form.air.step1.remarks}
                     onChangeText={(v) => updateAirStep("step1", "remarks", v)}
-                    editable={form.air.step1.remarksChecked && !isStepLocked(0)}
+                    editable={form.air.step1.remarksChecked && isAirStepEditable(0)}
                     placeholder="Enter remarks..."
                   />
                   <TouchableOpacity
@@ -920,8 +918,7 @@ export function NewBookingForm({
                         backgroundColor: form.air.step1.pickupVerified
                           ? "#059669"
                           : colors.primary,
-                        opacity:
-                          isStepLocked(0) && form.airStep !== 0 ? 0.6 : 1,
+                        opacity: !isAirStepEditable(0) ? 0.6 : 1,
                       },
                     ]}
                     onPress={() =>
@@ -931,7 +928,7 @@ export function NewBookingForm({
                         !form.air.step1.pickupVerified,
                       )
                     }
-                    disabled={isStepLocked(0) && form.airStep !== 0}
+                    disabled={!isAirStepEditable(0)}
                   >
                     <Text style={styles.stampBtnText}>
                       {form.air.step1.pickupVerified
@@ -961,18 +958,18 @@ export function NewBookingForm({
                       <TextInput
                         style={[
                           styles.formInput,
-                          inputStyle(colors, false, isStepLocked(1)),
+                          inputStyle(colors, false, !isAirStepEditable(1)),
                         ]}
                         value={form.air.step2.date}
                         onChangeText={(v) => updateAirStep("step2", "date", v)}
-                        editable={!isStepLocked(1)}
+                        editable={isAirStepEditable(1)}
                       />
                     </StepFormRow>
                     <StepFormRow label="TIME" style={{ width: "48%" }}>
                       <MilitaryTimeInput
                         value={form.air.step2.time}
                         onChange={(v) => updateAirStep("step2", "time", v)}
-                        editable={!isStepLocked(1)}
+                        editable={isAirStepEditable(1)}
                       />
                     </StepFormRow>
                   </View>
@@ -985,19 +982,19 @@ export function NewBookingForm({
                     onToggle={() =>
                       toggleAirStep("step2", "goodPhysicalCondition")
                     }
-                    disabled={isStepLocked(1)}
+                    disabled={!isAirStepEditable(1)}
                   />
                   <CheckBox
                     label="Labels/marking"
                     checked={form.air.step2.labelsMarking}
                     onToggle={() => toggleAirStep("step2", "labelsMarking")}
-                    disabled={isStepLocked(1)}
+                    disabled={!isAirStepEditable(1)}
                   />
                   <CheckBox
                     label="Add Remarks"
                     checked={form.air.step2.remarksChecked}
                     onToggle={() => toggleRemarksChecked("step2")}
-                    disabled={isStepLocked(1)}
+                    disabled={!isAirStepEditable(1)}
                   />
                   <TextInput
                     style={[
@@ -1006,25 +1003,25 @@ export function NewBookingForm({
                       {
                         marginTop: 8,
                         opacity:
-                          form.air.step2.remarksChecked && !isStepLocked(1)
+                          form.air.step2.remarksChecked && isAirStepEditable(1)
                             ? 1
                             : 0.6,
                       },
                     ]}
                     value={form.air.step2.remarks}
                     onChangeText={(v) => updateAirStep("step2", "remarks", v)}
-                    editable={form.air.step2.remarksChecked && !isStepLocked(1)}
+                    editable={form.air.step2.remarksChecked && isAirStepEditable(1)}
                     placeholder="Enter remarks..."
                   />
                   <StepFormRow label="WEATHER CONDITION" style={{ marginTop: 12 }}>
                     <TextInput
                       style={[
                         styles.formInput,
-                        inputStyle(colors, false, isStepLocked(1)),
+                        inputStyle(colors, false, !isAirStepEditable(1)),
                       ]}
                       value={form.air.step2.weather}
                       onChangeText={(v) => updateAirStep("step2", "weather", v)}
-                      editable={!isStepLocked(1)}
+                      editable={isAirStepEditable(1)}
                       placeholder="Enter weather condition..."
                       placeholderTextColor={colors.mutedForeground}
                     />
@@ -1040,7 +1037,7 @@ export function NewBookingForm({
                       inputStyle(colors),
                       {
                         opacity:
-                          form.air.step2.repVerified || isStepLocked(1)
+                          form.air.step2.repVerified || !isAirStepEditable(1)
                             ? 0.6
                             : 1,
                       },
@@ -1049,7 +1046,7 @@ export function NewBookingForm({
                     onChangeText={(v) =>
                       updateAirStep("step2", "warehouseRep", v)
                     }
-                    editable={!form.air.step2.repVerified && !isStepLocked(1)}
+                    editable={!form.air.step2.repVerified && isAirStepEditable(1)}
                     placeholder="Input your full name to stamp"
                     placeholderTextColor={colors.mutedForeground}
                   />
@@ -1061,8 +1058,7 @@ export function NewBookingForm({
                         backgroundColor: form.air.step2.repVerified
                           ? "#059669"
                           : colors.primary,
-                        opacity:
-                          isStepLocked(1) && form.airStep !== 1 ? 0.6 : 1,
+                        opacity: !isAirStepEditable(1) ? 0.6 : 1,
                       },
                     ]}
                     onPress={() =>
@@ -1072,7 +1068,7 @@ export function NewBookingForm({
                         !form.air.step2.repVerified,
                       )
                     }
-                    disabled={isStepLocked(1) && form.airStep !== 1}
+                    disabled={!isAirStepEditable(1)}
                   >
                     <Text style={styles.stampBtnText}>
                       {form.air.step2.repVerified
@@ -1102,18 +1098,18 @@ export function NewBookingForm({
                       <TextInput
                         style={[
                           styles.formInput,
-                          inputStyle(colors, false, isStepLocked(2)),
+                          inputStyle(colors, false, !isAirStepEditable(2)),
                         ]}
                         value={form.air.step3.date}
                         onChangeText={(v) => updateAirStep("step3", "date", v)}
-                        editable={!isStepLocked(2)}
+                        editable={isAirStepEditable(2)}
                       />
                     </StepFormRow>
                     <StepFormRow label="TIME" style={{ width: "48%" }}>
                       <MilitaryTimeInput
                         value={form.air.step3.time}
                         onChange={(v) => updateAirStep("step3", "time", v)}
-                        editable={!isStepLocked(2)}
+                        editable={isAirStepEditable(2)}
                       />
                     </StepFormRow>
                   </View>
@@ -1126,19 +1122,19 @@ export function NewBookingForm({
                     onToggle={() =>
                       toggleAirStep("step3", "goodPhysicalCondition")
                     }
-                    disabled={isStepLocked(2)}
+                    disabled={!isAirStepEditable(2)}
                   />
                   <CheckBox
                     label="Labels/marking"
                     checked={form.air.step3.labelsMarking}
                     onToggle={() => toggleAirStep("step3", "labelsMarking")}
-                    disabled={isStepLocked(2)}
+                    disabled={!isAirStepEditable(2)}
                   />
                   <CheckBox
                     label="Add Remarks"
                     checked={form.air.step3.remarksChecked}
                     onToggle={() => toggleRemarksChecked("step3")}
-                    disabled={isStepLocked(2)}
+                    disabled={!isAirStepEditable(2)}
                   />
                   <TextInput
                     style={[
@@ -1147,25 +1143,25 @@ export function NewBookingForm({
                       {
                         marginTop: 8,
                         opacity:
-                          form.air.step3.remarksChecked && !isStepLocked(2)
+                          form.air.step3.remarksChecked && isAirStepEditable(2)
                             ? 1
                             : 0.6,
                       },
                     ]}
                     value={form.air.step3.remarks}
                     onChangeText={(v) => updateAirStep("step3", "remarks", v)}
-                    editable={form.air.step3.remarksChecked && !isStepLocked(2)}
+                    editable={form.air.step3.remarksChecked && isAirStepEditable(2)}
                     placeholder="Enter remarks..."
                   />
                   <StepFormRow label="WEATHER CONDITION" style={{ marginTop: 12 }}>
                     <TextInput
                       style={[
                         styles.formInput,
-                        inputStyle(colors, false, isStepLocked(1)),
+                        inputStyle(colors, false, !isAirStepEditable(1)),
                       ]}
                       value={form.air.step2.weather}
                       onChangeText={(v) => updateAirStep("step2", "weather", v)}
-                      editable={!isStepLocked(1)}
+                      editable={isAirStepEditable(1)}
                       placeholder="Enter weather condition..."
                       placeholderTextColor={colors.mutedForeground}
                     />
@@ -1181,7 +1177,7 @@ export function NewBookingForm({
                       inputStyle(colors),
                       {
                         opacity:
-                          form.air.step3.warehouseRepVerified || isStepLocked(2)
+                          form.air.step3.warehouseRepVerified || !isAirStepEditable(2)
                             ? 0.6
                             : 1,
                       },
@@ -1191,7 +1187,7 @@ export function NewBookingForm({
                       updateAirStep("step3", "warehouseRep", v)
                     }
                     editable={
-                      !form.air.step3.warehouseRepVerified && !isStepLocked(2)
+                      !form.air.step3.warehouseRepVerified && isAirStepEditable(2)
                     }
                     placeholder="Input your full name to stamp"
                     placeholderTextColor={colors.mutedForeground}
@@ -1204,8 +1200,7 @@ export function NewBookingForm({
                         backgroundColor: form.air.step3.warehouseRepVerified
                           ? "#059669"
                           : colors.primary,
-                        opacity:
-                          isStepLocked(2) && form.airStep !== 2 ? 0.6 : 1,
+                        opacity: !isAirStepEditable(2) ? 0.6 : 1,
                       },
                     ]}
                     onPress={() =>
@@ -1215,7 +1210,7 @@ export function NewBookingForm({
                         !form.air.step3.warehouseRepVerified,
                       )
                     }
-                    disabled={isStepLocked(2) && form.airStep !== 2}
+                    disabled={!isAirStepEditable(2)}
                   >
                     <Text style={styles.stampBtnText}>
                       {form.air.step3.warehouseRepVerified
@@ -1245,18 +1240,18 @@ export function NewBookingForm({
                       <TextInput
                         style={[
                           styles.formInput,
-                          inputStyle(colors, false, isStepLocked(3)),
+                          inputStyle(colors, false, !isAirStepEditable(3)),
                         ]}
                         value={form.air.step4.date}
                         onChangeText={(v) => updateAirStep("step4", "date", v)}
-                        editable={!isStepLocked(3)}
+                        editable={isAirStepEditable(3)}
                       />
                     </StepFormRow>
                     <StepFormRow label="TIME" style={{ width: "48%" }}>
                       <MilitaryTimeInput
                         value={form.air.step4.time}
                         onChange={(v) => updateAirStep("step4", "time", v)}
-                        editable={!isStepLocked(3)}
+                        editable={isAirStepEditable(3)}
                       />
                     </StepFormRow>
                   </View>
@@ -1266,11 +1261,11 @@ export function NewBookingForm({
                   <TextInput
                     style={[
                       styles.formInput,
-                      inputStyle(colors, false, isStepLocked(3)),
+                      inputStyle(colors, false, !isAirStepEditable(3)),
                     ]}
                     value={form.air.step4.mawb}
                     onChangeText={(v) => updateAirStep("step4", "mawb", v)}
-                    editable={!isStepLocked(3)}
+                    editable={isAirStepEditable(3)}
                   />
                   <Text
                     style={[
@@ -1286,19 +1281,19 @@ export function NewBookingForm({
                     onToggle={() =>
                       toggleAirStep("step4", "goodPhysicalCondition")
                     }
-                    disabled={isStepLocked(3)}
+                    disabled={!isAirStepEditable(3)}
                   />
                   <CheckBox
                     label="Labels/marking"
                     checked={form.air.step4.labelsMarking}
                     onToggle={() => toggleAirStep("step4", "labelsMarking")}
-                    disabled={isStepLocked(3)}
+                    disabled={!isAirStepEditable(3)}
                   />
                   <CheckBox
                     label="Add Remarks"
                     checked={form.air.step4.remarksChecked}
                     onToggle={() => toggleRemarksChecked("step4")}
-                    disabled={isStepLocked(3)}
+                    disabled={!isAirStepEditable(3)}
                   />
                   <TextInput
                     style={[
@@ -1307,25 +1302,25 @@ export function NewBookingForm({
                       {
                         marginTop: 8,
                         opacity:
-                          form.air.step4.remarksChecked && !isStepLocked(3)
+                          form.air.step4.remarksChecked && isAirStepEditable(3)
                             ? 1
                             : 0.6,
                       },
                     ]}
                     value={form.air.step4.remarks}
                     onChangeText={(v) => updateAirStep("step4", "remarks", v)}
-                    editable={form.air.step4.remarksChecked && !isStepLocked(3)}
+                    editable={form.air.step4.remarksChecked && isAirStepEditable(3)}
                     placeholder="Enter remarks..."
                   />
                   <StepFormRow label="WEATHER CONDITION" style={{ marginTop: 12 }}>
                     <TextInput
                       style={[
                         styles.formInput,
-                        inputStyle(colors, false, isStepLocked(1)),
+                        inputStyle(colors, false, !isAirStepEditable(1)),
                       ]}
                       value={form.air.step2.weather}
                       onChangeText={(v) => updateAirStep("step2", "weather", v)}
-                      editable={!isStepLocked(1)}
+                      editable={isAirStepEditable(1)}
                       placeholder="Enter weather condition..."
                       placeholderTextColor={colors.mutedForeground}
                     />
@@ -1341,7 +1336,7 @@ export function NewBookingForm({
                       inputStyle(colors),
                       {
                         opacity:
-                          form.air.step4.airlineRepVerified || isStepLocked(3)
+                          form.air.step4.airlineRepVerified || !isAirStepEditable(3)
                             ? 0.6
                             : 1,
                       },
@@ -1351,7 +1346,7 @@ export function NewBookingForm({
                       updateAirStep("step4", "airlineRep", v)
                     }
                     editable={
-                      !form.air.step4.airlineRepVerified && !isStepLocked(3)
+                      !form.air.step4.airlineRepVerified && isAirStepEditable(3)
                     }
                     placeholder="Input your full name to stamp"
                     placeholderTextColor={colors.mutedForeground}
@@ -1364,8 +1359,7 @@ export function NewBookingForm({
                         backgroundColor: form.air.step4.airlineRepVerified
                           ? "#059669"
                           : colors.primary,
-                        opacity:
-                          isStepLocked(3) && form.airStep !== 3 ? 0.6 : 1,
+                        opacity: !isAirStepEditable(3) ? 0.6 : 1,
                       },
                     ]}
                     onPress={() =>
@@ -1375,7 +1369,7 @@ export function NewBookingForm({
                         !form.air.step4.airlineRepVerified,
                       )
                     }
-                    disabled={isStepLocked(3) && form.airStep !== 3}
+                    disabled={!isAirStepEditable(3)}
                   >
                     <Text style={styles.stampBtnText}>
                       {form.air.step4.airlineRepVerified
