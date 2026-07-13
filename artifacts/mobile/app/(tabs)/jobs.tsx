@@ -1029,7 +1029,7 @@ export default function JobsScreen() {
         data={filtered}
         keyExtractor={(item) => item.id}
         renderItem={renderJob}
-        contentContainerStyle={{ padding: 16, gap: 10, paddingBottom: 100 }}
+        contentContainerStyle={{ padding: 16, gap: 16, paddingBottom: 100 }}
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={
           <View style={styles.empty}>
@@ -1810,7 +1810,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   searchInput: { flex: 1, fontSize: 14 },
-  filterRow: { maxHeight: 48, marginBottom: 4 },
+  filterRow: { maxHeight: 48, marginBottom: 12 },
   filterChip: {
     paddingHorizontal: 12,
     paddingVertical: 6,
