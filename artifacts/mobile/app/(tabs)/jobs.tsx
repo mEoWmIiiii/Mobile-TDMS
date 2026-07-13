@@ -592,7 +592,7 @@ export default function JobsScreen() {
     if (!anim) return null;
     const maxH = anim.interpolate({
       inputRange: [0, 1],
-      outputRange: [0, 540],
+      outputRange: [0, 760],
     });
     const manifest = getManifest(job.id);
     const status = getStatus(job);
