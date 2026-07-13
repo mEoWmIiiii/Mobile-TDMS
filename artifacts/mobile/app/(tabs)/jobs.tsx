@@ -611,6 +611,8 @@ export default function JobsScreen() {
       return 0;
     })();
     const nextLabel = phase >= 4 ? "Completed" : `Next: ${PHASE_LABELS[phase]}`;
+    const air = localAirForms[job.id];
+    const pickupStatus = air?.step1.pickupVerified ? "Picked Up" : "Pending";
 
     return (
       <View
@@ -689,8 +691,20 @@ export default function JobsScreen() {
               CARGO & DISPATCH
             </Text>
             <View style={styles.detailGrid}>
-              <DetailItem label="Driver" value={job.driver} />
-              <DetailItem label="Truck" value={job.truck} />
+              {job.mode === "Air" ? (
+                <>
+                  <DetailItem
+                    label="Pickup Driver"
+                    value={job.driver && job.driver !== "TBD" ? job.driver : "Not Assigned"}
+                  />
+                  <DetailItem label="Pickup Status" value={pickupStatus} />
+                </>
+              ) : (
+                <>
+                  <DetailItem label="Driver" value={job.driver} />
+                  <DetailItem label="Truck" value={job.truck} />
+                </>
+              )}
               <DetailItem label="Cargo" value={job.cargo} />
               <DetailItem label="Weight" value={`${job.weight} kg`} />
               <DetailItem label="Mode" value={job.mode} />
