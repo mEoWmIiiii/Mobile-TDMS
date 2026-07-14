@@ -1,0 +1,88 @@
+Improve the Date & Time input experience throughout the Air Cargo workflow without changing the overall UI design.
+
+Goal
+
+Replace all separate Date and Time inputs with one combined "Date & Time" input field for every operational step.
+
+Requirements
+Every timestamp field should be a single input box labeled Date & Time.
+When the user taps the field, open a DateTime Picker (date then time in one flow), instead of requiring manual typing.
+Users should never manually type dates like 06-25-25 or times like 13:30.
+After selection, automatically format and display the value.
+
+Example display:
+
+Jul 25, 2026 • 1:30 PM
+
+or
+
+25 Jul 2026, 1:30 PM
+
+Use one consistent format across the application.
+
+Apply to every operational step
+
+Replace separate Date and Time inputs with one Date & Time field in:
+
+Step 1 – Pickup at Client
+Step 2 – Warehouse In
+Step 3 – Warehouse Out
+Step 4 – Airline Acceptance
+Validation
+
+The Date & Time field is required anywhere a timestamp is required.
+
+Users should not be able to confirm or verify a step if its required Date & Time field is empty.
+
+Show the existing validation message style if no Date & Time has been selected.
+
+Editing Behavior
+
+If the current step is editable:
+
+tapping the Date & Time field opens the picker
+selecting a new value immediately updates the form
+
+If the step is read-only:
+
+display the formatted Date & Time
+tapping the field should do nothing
+
+Future steps (view-only):
+
+show the field if data exists
+otherwise display Not yet recorded
+Data Model
+
+Keep storing date/time as a proper timestamp (ISO string or Date object) internally.
+
+Do not save separate date and time values anymore unless required for backward compatibility.
+
+If backward compatibility is needed:
+
+automatically combine them into one DateTime object
+migrate existing data without breaking older records
+UI Requirements
+Keep the existing card layout.
+Do not redesign the screens.
+Replace only the input component.
+Maintain the current colors, spacing, typography, borders, and icons.
+The new Date & Time field should visually look like the existing input fields.
+Expected User Flow
+Tap Date & Time
+Date picker opens
+Select date
+Time picker opens automatically (or use a native combined DateTime picker if supported)
+Tap Done
+The input displays:
+Jul 25, 2026 • 1:30 PM
+Save the value into the form.
+Do Not Change
+Operational step logic
+Verification workflow
+Read-only/editable permissions
+Navigation behavior
+Existing design system
+Colors and layout
+
+Only improve the Date & Time input experience.

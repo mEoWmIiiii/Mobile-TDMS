@@ -32,6 +32,7 @@ export interface AirStep1 {
   ylphDriver: string;
   arrivalDate: string;
   arrivalTime: string;
+  arrivalTimestamp: string;
   pickupVerified: boolean;
 }
 export interface AirStep2 {
@@ -42,6 +43,7 @@ export interface AirStep2 {
   weather: string;
   date: string;
   time: string;
+  timestamp: string;
   quantity: string;
   warehouseRep: string;
   repVerified: boolean;
@@ -54,6 +56,7 @@ export interface AirStep3 {
   weather: string;
   date: string;
   time: string;
+  timestamp: string;
   quantity: string;
   warehouseRep: string;
   warehouseRepVerified: boolean;
@@ -67,6 +70,7 @@ export interface AirStep4 {
   weather: string;
   date: string;
   time: string;
+  timestamp: string;
   quantity: string;
   airlineRep: string;
   airlineRepVerified: boolean;
@@ -148,6 +152,49 @@ const formatMilitaryTime = (value: string) => {
   const digits = value.replace(/\D/g, "").slice(0, 4);
   return digits.length === 4 ? `${digits}h` : digits;
 };
+const formatTimestamp = (value?: string) => {
+  if (!value) return "";
+  const d = new Date(value);
+  if (isNaN(d.getTime())) return "";
+  const months = [
+    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+  ];
+  const month = months[d.getMonth()];
+  const day = d.getDate();
+  const year = d.getFullYear();
+  let hours = d.getHours();
+  const minutes = String(d.getMinutes()).padStart(2, "0");
+  const ampm = hours >= 12 ? "PM" : "AM";
+  hours = hours % 12 || 12;
+  return `${month} ${day}, ${year} • ${hours}:${minutes} ${ampm}`;
+};
+const timestampToDate = (value?: string) => {
+  if (!value) return "";
+  const d = new Date(value);
+  if (isNaN(d.getTime())) return "";
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+};
+const timestampToTime = (value?: string) => {
+  if (!value) return "";
+  const d = new Date(value);
+  if (isNaN(d.getTime())) return "";
+  const h = String(d.getHours()).padStart(2, "0");
+  const m = String(d.getMinutes()).padStart(2, "0");
+  return `${h}${m}H`;
+};
+const dateTimeToTimestamp = (date: string, time: string) => {
+  if (!date || !time) return "";
+  const digits = time.replace(/\D/g, "").slice(0, 4);
+  if (digits.length < 4) return "";
+  const h = parseInt(digits.slice(0, 2), 10);
+  const m = parseInt(digits.slice(2, 4), 10);
+  const d = new Date(`${date}T${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:00`);
+  return isNaN(d.getTime()) ? "" : d.toISOString();
+};
 
 const emptyForm = (): FormState => ({
   customer: "",
@@ -177,6 +224,7 @@ const emptyForm = (): FormState => ({
       ylphDriver: "",
       arrivalDate: "",
       arrivalTime: "",
+      arrivalTimestamp: "",
       pickupVerified: false,
     },
     step2: {
@@ -187,6 +235,7 @@ const emptyForm = (): FormState => ({
       weather: "",
       date: "",
       time: "",
+      timestamp: "",
       quantity: "",
       warehouseRep: "",
       repVerified: false,
@@ -199,6 +248,7 @@ const emptyForm = (): FormState => ({
       weather: "",
       date: "",
       time: "",
+      timestamp: "",
       quantity: "",
       warehouseRep: "",
       warehouseRepVerified: false,
@@ -212,6 +262,7 @@ const emptyForm = (): FormState => ({
       weather: "",
       date: "",
       time: "",
+      timestamp: "",
       quantity: "",
       airlineRep: "",
       airlineRepVerified: false,
@@ -222,6 +273,22 @@ const emptyForm = (): FormState => ({
 const mergeInitialData = (initialData?: Partial<FormState>) => {
   const base = emptyForm();
   if (!initialData) return base;
+  const s1: Partial<AirStep1> = initialData.air?.step1 ?? {};
+  const s2: Partial<AirStep2> = initialData.air?.step2 ?? {};
+  const s3: Partial<AirStep3> = initialData.air?.step3 ?? {};
+  const s4: Partial<AirStep4> = initialData.air?.step4 ?? {};
+  const step1Timestamp =
+    s1.arrivalTimestamp ||
+    dateTimeToTimestamp(s1.arrivalDate || "", s1.arrivalTime || "");
+  const step2Timestamp =
+    s2.timestamp ||
+    dateTimeToTimestamp(s2.date || "", s2.time || "");
+  const step3Timestamp =
+    s3.timestamp ||
+    dateTimeToTimestamp(s3.date || "", s3.time || "");
+  const step4Timestamp =
+    s4.timestamp ||
+    dateTimeToTimestamp(s4.date || "", s4.time || "");
   return {
     ...base,
     ...initialData,
@@ -230,10 +297,26 @@ const mergeInitialData = (initialData?: Partial<FormState>) => {
     air: {
       ...base.air,
       ...initialData.air,
-      step1: { ...base.air.step1, ...initialData.air?.step1 },
-      step2: { ...base.air.step2, ...initialData.air?.step2 },
-      step3: { ...base.air.step3, ...initialData.air?.step3 },
-      step4: { ...base.air.step4, ...initialData.air?.step4 },
+      step1: {
+        ...base.air.step1,
+        ...s1,
+        arrivalTimestamp: step1Timestamp,
+      },
+      step2: {
+        ...base.air.step2,
+        ...s2,
+        timestamp: step2Timestamp,
+      },
+      step3: {
+        ...base.air.step3,
+        ...s3,
+        timestamp: step3Timestamp,
+      },
+      step4: {
+        ...base.air.step4,
+        ...s4,
+        timestamp: step4Timestamp,
+      },
     },
   };
 };
@@ -340,6 +423,24 @@ export function NewBookingForm({
               : "Ok",
           } as AirExportSteps[AirStepKey],
         },
+      };
+    });
+  const setAirStepTimestamp = (stepKey: AirStepKey, timestamp: string) =>
+    setForm((f) => {
+      const step = f.air[stepKey];
+      const next = { ...step } as any;
+      if (stepKey === "step1") {
+        next.arrivalTimestamp = timestamp;
+        next.arrivalDate = timestampToDate(timestamp);
+        next.arrivalTime = timestampToTime(timestamp);
+      } else {
+        next.timestamp = timestamp;
+        next.date = timestampToDate(timestamp);
+        next.time = timestampToTime(timestamp);
+      }
+      return {
+        ...f,
+        air: { ...f.air, [stepKey]: next as AirExportSteps[AirStepKey] },
       };
     });
   const toggleMarking = (m: string) =>
@@ -805,7 +906,11 @@ export function NewBookingForm({
                         backgroundColor: form.air.step1.pickupVerified
                           ? "#059669"
                           : colors.primary,
-                        opacity: !isAirStepEditable(0) ? 0.6 : 1,
+                        opacity:
+                          !isAirStepEditable(0) ||
+                          !form.air.step1.arrivalTimestamp
+                            ? 0.6
+                            : 1,
                       },
                     ]}
                     onPress={() =>
@@ -817,7 +922,9 @@ export function NewBookingForm({
                         )
                       )
                     }
-                    disabled={!isAirStepEditable(0)}
+                    disabled={
+                      !isAirStepEditable(0) || !form.air.step1.arrivalTimestamp
+                    }
                   >
                     <Text style={styles.stampBtnText}>
                       {form.air.step1.pickupVerified
@@ -828,32 +935,22 @@ export function NewBookingForm({
                 }
               >
                 <View style={styles.stepCol}>
-                  <View
-                    style={{
-                      flexDirection: "row",
-                      justifyContent: "space-between",
-                      marginBottom: 12,
-                    }}
+                  <StepFormRow
+                    label="Date & Time"
+                    style={{ marginBottom: 12 }}
                   >
-                    <StepFormRow label="ARRIVAL DATE" style={{ width: "48%" }}>
-                      <DatePickerField
-                        value={form.air.step1.arrivalDate}
-                        onChange={(v) =>
-                          updateAirStep("step1", "arrivalDate", v)
-                        }
-                        editable={isAirStepEditable(0)}
-                      />
-                    </StepFormRow>
-                    <StepFormRow label="ARRIVAL TIME" style={{ width: "48%" }}>
-                      <TimePickerField
-                        value={form.air.step1.arrivalTime}
-                        onChange={(v) =>
-                          updateAirStep("step1", "arrivalTime", v)
-                        }
-                        editable={isAirStepEditable(0)}
-                      />
-                    </StepFormRow>
-                  </View>
+                    <DateTimePickerField
+                      value={form.air.step1.arrivalTimestamp}
+                      onChange={(timestamp) =>
+                        setAirStepTimestamp("step1", timestamp)
+                      }
+                      editable={isAirStepEditable(0)}
+                      error={
+                        !form.air.step1.arrivalTimestamp &&
+                        isAirStepEditable(0)
+                      }
+                    />
+                  </StepFormRow>
                   <FormRow label="DESCRIPTION OF GOODS">
                     <TextInput
                       style={[
@@ -978,7 +1075,10 @@ export function NewBookingForm({
                         backgroundColor: form.air.step2.repVerified
                           ? "#059669"
                           : colors.primary,
-                        opacity: !isAirStepEditable(1) ? 0.6 : 1,
+                        opacity:
+                          !isAirStepEditable(1) || !form.air.step2.timestamp
+                            ? 0.6
+                            : 1,
                       },
                     ]}
                     onPress={() =>
@@ -990,7 +1090,9 @@ export function NewBookingForm({
                         )
                       )
                     }
-                    disabled={!isAirStepEditable(1)}
+                    disabled={
+                      !isAirStepEditable(1) || !form.air.step2.timestamp
+                    }
                   >
                     <Text style={styles.stampBtnText}>
                       {form.air.step2.repVerified
@@ -1001,28 +1103,21 @@ export function NewBookingForm({
                 }
               >
                 <View style={styles.stepCol}>
-                  <View
-                    style={{
-                      flexDirection: "row",
-                      justifyContent: "space-between",
-                      marginBottom: 12,
-                    }}
+                  <StepFormRow
+                    label="Date & Time"
+                    style={{ marginBottom: 12 }}
                   >
-                    <StepFormRow label="DATE" style={{ width: "48%" }}>
-                      <DatePickerField
-                        value={form.air.step2.date}
-                        onChange={(v) => updateAirStep("step2", "date", v)}
-                        editable={isAirStepEditable(1)}
-                      />
-                    </StepFormRow>
-                    <StepFormRow label="TIME" style={{ width: "48%" }}>
-                      <TimePickerField
-                        value={form.air.step2.time}
-                        onChange={(v) => updateAirStep("step2", "time", v)}
-                        editable={isAirStepEditable(1)}
-                      />
-                    </StepFormRow>
-                  </View>
+                    <DateTimePickerField
+                      value={form.air.step2.timestamp}
+                      onChange={(timestamp) =>
+                        setAirStepTimestamp("step2", timestamp)
+                      }
+                      editable={isAirStepEditable(1)}
+                      error={
+                        !form.air.step2.timestamp && isAirStepEditable(1)
+                      }
+                    />
+                  </StepFormRow>
                   <Text style={[styles.sectionTitle, { color: "#64748B" }]}>
                     Acceptance Details
                   </Text>
@@ -1118,7 +1213,10 @@ export function NewBookingForm({
                         backgroundColor: form.air.step3.warehouseRepVerified
                           ? "#059669"
                           : colors.primary,
-                        opacity: !isAirStepEditable(2) ? 0.6 : 1,
+                        opacity:
+                          !isAirStepEditable(2) || !form.air.step3.timestamp
+                            ? 0.6
+                            : 1,
                       },
                     ]}
                     onPress={() =>
@@ -1130,7 +1228,9 @@ export function NewBookingForm({
                         )
                       )
                     }
-                    disabled={!isAirStepEditable(2)}
+                    disabled={
+                      !isAirStepEditable(2) || !form.air.step3.timestamp
+                    }
                   >
                     <Text style={styles.stampBtnText}>
                       {form.air.step3.warehouseRepVerified
@@ -1141,28 +1241,21 @@ export function NewBookingForm({
                 }
               >
                 <View style={styles.stepCol}>
-                  <View
-                    style={{
-                      flexDirection: "row",
-                      justifyContent: "space-between",
-                      marginBottom: 12,
-                    }}
+                  <StepFormRow
+                    label="Date & Time"
+                    style={{ marginBottom: 12 }}
                   >
-                    <StepFormRow label="DATE" style={{ width: "48%" }}>
-                      <DatePickerField
-                        value={form.air.step3.date}
-                        onChange={(v) => updateAirStep("step3", "date", v)}
-                        editable={isAirStepEditable(2)}
-                      />
-                    </StepFormRow>
-                    <StepFormRow label="TIME" style={{ width: "48%" }}>
-                      <TimePickerField
-                        value={form.air.step3.time}
-                        onChange={(v) => updateAirStep("step3", "time", v)}
-                        editable={isAirStepEditable(2)}
-                      />
-                    </StepFormRow>
-                  </View>
+                    <DateTimePickerField
+                      value={form.air.step3.timestamp}
+                      onChange={(timestamp) =>
+                        setAirStepTimestamp("step3", timestamp)
+                      }
+                      editable={isAirStepEditable(2)}
+                      error={
+                        !form.air.step3.timestamp && isAirStepEditable(2)
+                      }
+                    />
+                  </StepFormRow>
                   <Text style={[styles.sectionTitle, { color: "#64748B" }]}>
                     Acceptance Details
                   </Text>
@@ -1260,7 +1353,10 @@ export function NewBookingForm({
                         backgroundColor: form.air.step4.airlineRepVerified
                           ? "#059669"
                           : colors.primary,
-                        opacity: !isAirStepEditable(3) ? 0.6 : 1,
+                        opacity:
+                          !isAirStepEditable(3) || !form.air.step4.timestamp
+                            ? 0.6
+                            : 1,
                       },
                     ]}
                     onPress={() =>
@@ -1272,7 +1368,9 @@ export function NewBookingForm({
                         )
                       )
                     }
-                    disabled={!isAirStepEditable(3)}
+                    disabled={
+                      !isAirStepEditable(3) || !form.air.step4.timestamp
+                    }
                   >
                     <Text style={styles.stampBtnText}>
                       {form.air.step4.airlineRepVerified
@@ -1283,28 +1381,21 @@ export function NewBookingForm({
                 }
               >
                 <View style={styles.stepCol}>
-                  <View
-                    style={{
-                      flexDirection: "row",
-                      justifyContent: "space-between",
-                      marginBottom: 12,
-                    }}
+                  <StepFormRow
+                    label="Date & Time"
+                    style={{ marginBottom: 12 }}
                   >
-                    <StepFormRow label="DATE" style={{ width: "48%" }}>
-                      <DatePickerField
-                        value={form.air.step4.date}
-                        onChange={(v) => updateAirStep("step4", "date", v)}
-                        editable={isAirStepEditable(3)}
-                      />
-                    </StepFormRow>
-                    <StepFormRow label="TIME" style={{ width: "48%" }}>
-                      <TimePickerField
-                        value={form.air.step4.time}
-                        onChange={(v) => updateAirStep("step4", "time", v)}
-                        editable={isAirStepEditable(3)}
-                      />
-                    </StepFormRow>
-                  </View>
+                    <DateTimePickerField
+                      value={form.air.step4.timestamp}
+                      onChange={(timestamp) =>
+                        setAirStepTimestamp("step4", timestamp)
+                      }
+                      editable={isAirStepEditable(3)}
+                      error={
+                        !form.air.step4.timestamp && isAirStepEditable(3)
+                      }
+                    />
+                  </StepFormRow>
                   <Text style={[styles.sectionTitle, { color: "#64748B" }]}>
                     MAWB
                   </Text>
@@ -1549,151 +1640,109 @@ function StepCard({
   );
 }
 
-function DatePickerField({
+function DateTimePickerField({
   value,
   onChange,
   editable = true,
-  placeholder = "YYYY-MM-DD",
+  error = false,
 }: {
   value: string;
-  onChange: (v: string) => void;
+  onChange: (timestamp: string) => void;
   editable?: boolean;
-  placeholder?: string;
+  error?: boolean;
 }) {
   const colors = useColors();
-  const [show, setShow] = useState(false);
+  const [mode, setMode] = useState<"date" | "time" | null>(null);
+  const [pendingDate, setPendingDate] = useState<Date | null>(null);
   const parsed = useMemo(() => {
     if (!value) return new Date();
     const d = new Date(value);
     return isNaN(d.getTime()) ? new Date() : d;
   }, [value]);
 
+  const display = useMemo(() => {
+    if (value) return formatTimestamp(value);
+    if (!editable) return "Not yet recorded";
+    return "Select Date & Time";
+  }, [value, editable]);
+
+  const handleDateChange = (event: any, selectedDate?: Date) => {
+    if (event.type === "dismissed") {
+      setMode(null);
+      setPendingDate(null);
+      return;
+    }
+    if (selectedDate) {
+      setPendingDate(selectedDate);
+      setMode("time");
+    }
+  };
+
+  const handleTimeChange = (event: any, selectedDate?: Date) => {
+    setMode(null);
+    if (event.type === "dismissed" || !selectedDate || !pendingDate) {
+      setPendingDate(null);
+      return;
+    }
+    const combined = new Date(pendingDate);
+    combined.setHours(selectedDate.getHours());
+    combined.setMinutes(selectedDate.getMinutes());
+    combined.setSeconds(0);
+    combined.setMilliseconds(0);
+    onChange(combined.toISOString());
+    setPendingDate(null);
+  };
+
   return (
     <>
       <TouchableOpacity
         style={[
           styles.formInput,
           inputStyle(colors, false, !editable),
-          { justifyContent: "center" },
+          {
+            justifyContent: "center",
+            borderColor: error ? colors.destructive : undefined,
+          },
         ]}
-        onPress={() => editable && setShow(true)}
+        onPress={() => editable && setMode("date")}
         disabled={!editable}
         activeOpacity={editable ? 0.8 : 1}
       >
         <Text
           style={{
-            color: value ? colors.foreground : colors.mutedForeground,
+            color: value
+              ? colors.foreground
+              : !editable
+                ? colors.mutedForeground
+                : colors.mutedForeground,
           }}
         >
-          {value || placeholder}
+          {display}
         </Text>
       </TouchableOpacity>
-      {show && (
+      {error && (
+        <Text style={{ color: colors.destructive, fontSize: 12, marginTop: 4 }}>
+          Date & Time is required
+        </Text>
+      )}
+      {mode === "date" && (
         <DateTimePicker
-          value={parsed}
+          value={pendingDate || parsed}
           mode="date"
           display="default"
-          onChange={(event, selectedDate) => {
-            setShow(false);
-            if (selectedDate && event.type !== "dismissed") {
-              const y = selectedDate.getFullYear();
-              const m = String(selectedDate.getMonth() + 1).padStart(2, "0");
-              const d = String(selectedDate.getDate()).padStart(2, "0");
-              onChange(`${y}-${m}-${d}`);
-            }
-          }}
+          onChange={handleDateChange}
         />
       )}
-    </>
-  );
-}
-
-function TimePickerField({
-  value,
-  onChange,
-  editable = true,
-  placeholder = "1300h",
-}: {
-  value: string;
-  onChange: (v: string) => void;
-  editable?: boolean;
-  placeholder?: string;
-}) {
-  const colors = useColors();
-  const [show, setShow] = useState(false);
-  const parsed = useMemo(() => {
-    const d = new Date();
-    const digits = value.replace(/\D/g, "").slice(0, 4);
-    if (digits.length >= 2) {
-      d.setHours(parseInt(digits.slice(0, 2), 10));
-      d.setMinutes(digits.length >= 4 ? parseInt(digits.slice(2, 4), 10) : 0);
-    }
-    return d;
-  }, [value]);
-
-  return (
-    <>
-      <TouchableOpacity
-        style={[
-          styles.formInput,
-          inputStyle(colors, false, !editable),
-          { justifyContent: "center" },
-        ]}
-        onPress={() => editable && setShow(true)}
-        disabled={!editable}
-        activeOpacity={editable ? 0.8 : 1}
-      >
-        <Text
-          style={{
-            color: value ? colors.foreground : colors.mutedForeground,
-          }}
-        >
-          {value || placeholder}
-        </Text>
-      </TouchableOpacity>
-      {show && (
+      {mode === "time" && pendingDate && (
         <DateTimePicker
-          value={parsed}
+          value={pendingDate}
           mode="time"
-          is24Hour={true}
+          is24Hour={false}
           display="default"
-          onChange={(event, selectedDate) => {
-            setShow(false);
-            if (selectedDate && event.type !== "dismissed") {
-              const h = String(selectedDate.getHours()).padStart(2, "0");
-              const m = String(selectedDate.getMinutes()).padStart(2, "0");
-              onChange(`${h}${m}H`);
-            }
-          }}
+          onChange={handleTimeChange}
         />
       )}
     </>
-  );
-}
-
-function MilitaryTimeInput({
-  value,
-  onChange,
-  placeholder = "1300h",
-  editable = true,
-}: {
-  value: string;
-  onChange: (v: string) => void;
-  placeholder?: string;
-  editable?: boolean;
-}) {
-  const colors = useColors();
-  return (
-    <TextInput
-      style={[styles.formInput, inputStyle(colors, false, !editable)]}
-      placeholder={placeholder}
-      placeholderTextColor={colors.mutedForeground}
-      value={value}
-      onChangeText={(v) => onChange(formatMilitaryTime(v))}
-      keyboardType="numeric"
-      maxLength={5}
-      editable={editable}
-    />
   );
 }
 
