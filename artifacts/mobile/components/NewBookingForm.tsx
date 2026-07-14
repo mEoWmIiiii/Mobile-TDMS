@@ -10,6 +10,7 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
+  useWindowDimensions,
   View,
 } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
@@ -344,6 +345,8 @@ export function NewBookingForm({
   const [airFieldsHeight] = useState(() => new Animated.Value(0));
   const [barcodeModal, setBarcodeModal] = useState(false);
   const [originalBrightness, setOriginalBrightness] = useState<number | null>(null);
+  const { width: screenWidth } = useWindowDimensions();
+  const isWideCargoTag = screenWidth >= 520;
 
   useEffect(() => {
     if (!visible) return;
@@ -1445,8 +1448,22 @@ export function NewBookingForm({
                         Master Air Waybill
                       </Text>
                     </View>
-                    <View style={styles.cargoTagBody}>
-                      <View style={styles.cargoTagInputCol}>
+                    <View
+                      style={[
+                        styles.cargoTagBody,
+                        isWideCargoTag
+                          ? styles.cargoTagBodyRow
+                          : styles.cargoTagBodyColumn,
+                      ]}
+                    >
+                      <View
+                        style={[
+                          styles.cargoTagInputCol,
+                          isWideCargoTag
+                            ? styles.cargoTagInputColRow
+                            : styles.cargoTagInputColColumn,
+                        ]}
+                      >
                         <Text
                           style={[
                             styles.cargoTagLabel,
@@ -1471,9 +1488,19 @@ export function NewBookingForm({
                         style={[
                           styles.cargoTagDivider,
                           { backgroundColor: colors.border },
+                          isWideCargoTag
+                            ? styles.cargoTagDividerRow
+                            : styles.cargoTagDividerColumn,
                         ]}
                       />
-                      <View style={styles.cargoTagBarcodeCol}>
+                      <View
+                        style={[
+                          styles.cargoTagBarcodeCol,
+                          isWideCargoTag
+                            ? styles.cargoTagBarcodeColRow
+                            : styles.cargoTagBarcodeColColumn,
+                        ]}
+                      >
                         {form.air.step4.mawb ? (
                           <TouchableOpacity
                             onPress={openBarcode}
@@ -2346,8 +2373,12 @@ const styles = StyleSheet.create({
     fontWeight: "700" as const,
     letterSpacing: 0.3,
   },
-  cargoTagBody: { flexDirection: "row", gap: 16, alignItems: "stretch" },
-  cargoTagInputCol: { flex: 1, gap: 8, justifyContent: "center" },
+  cargoTagBody: { gap: 16, alignItems: "stretch" },
+  cargoTagBodyRow: { flexDirection: "row" },
+  cargoTagBodyColumn: { flexDirection: "column" },
+  cargoTagInputCol: { gap: 8, justifyContent: "center" },
+  cargoTagInputColRow: { flex: 2, minWidth: 120 },
+  cargoTagInputColColumn: { width: "100%" },
   cargoTagLabel: {
     fontSize: 12,
     fontWeight: "600" as const,
@@ -2362,20 +2393,21 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: "600" as const,
   },
-  cargoTagDivider: { width: 1, marginVertical: 4 },
-  cargoTagBarcodeCol: {
-    width: 180,
-    justifyContent: "center",
-    alignItems: "center",
-  },
+  cargoTagDivider: { marginVertical: 4 },
+  cargoTagDividerRow: { width: 1 },
+  cargoTagDividerColumn: { width: "100%", height: 1, marginVertical: 8 },
+  cargoTagBarcodeCol: { justifyContent: "center", alignItems: "center" },
+  cargoTagBarcodeColRow: { flex: 1, minWidth: 160, maxWidth: 200 },
+  cargoTagBarcodeColColumn: { width: "100%" },
   cargoTagBarcodePanel: {
     backgroundColor: "#FFFFFF",
     borderRadius: 10,
-    padding: 12,
-    paddingLeft: 14,
+    padding: 16,
+    paddingLeft: 18,
     alignItems: "center",
-    gap: 10,
+    gap: 12,
     width: "100%",
+    minWidth: 150,
     borderLeftWidth: 2,
     borderLeftColor: "#E2E8F0",
     borderStyle: "dashed",
@@ -2383,6 +2415,7 @@ const styles = StyleSheet.create({
   cargoTagBarcodeWrapper: {
     width: "100%",
     alignItems: "center",
+    justifyContent: "center",
     overflow: "hidden",
   },
   cargoTagBarcodeValue: {
