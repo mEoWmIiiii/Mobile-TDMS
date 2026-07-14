@@ -786,10 +786,10 @@ export function NewBookingForm({
                 </View>
                 <View style={styles.airHeaderCol}>
                   <FormRow label="Date">
-                    <TextInput
-                      style={[styles.formInput, inputStyle(colors, true)]}
+                    <DatePickerField
                       value={form.date}
-                      onChangeText={(v) => setForm({ ...form, date: v })}
+                      onChange={(v) => setForm({ ...form, date: v })}
+                      editable={true}
                     />
                   </FormRow>
                   <FormRow label="Quantity">
@@ -1637,6 +1637,65 @@ function StepCard({
         </View>
       )}
     </View>
+  );
+}
+
+function DatePickerField({
+  value,
+  onChange,
+  editable = true,
+  placeholder = "YYYY-MM-DD",
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  editable?: boolean;
+  placeholder?: string;
+}) {
+  const colors = useColors();
+  const [show, setShow] = useState(false);
+  const parsed = useMemo(() => {
+    if (!value) return new Date();
+    const d = new Date(value);
+    return isNaN(d.getTime()) ? new Date() : d;
+  }, [value]);
+
+  return (
+    <>
+      <TouchableOpacity
+        style={[
+          styles.formInput,
+          inputStyle(colors, true, !editable),
+          { justifyContent: "center" },
+        ]}
+        onPress={() => editable && setShow(true)}
+        disabled={!editable}
+        activeOpacity={editable ? 0.8 : 1}
+      >
+        <Text
+          style={{
+            color: value ? colors.foreground : colors.mutedForeground,
+          }}
+        >
+          {value || placeholder}
+        </Text>
+      </TouchableOpacity>
+      {show && (
+        <DateTimePicker
+          value={parsed}
+          mode="date"
+          display="default"
+          onChange={(event, selectedDate) => {
+            setShow(false);
+            if (selectedDate && event.type !== "dismissed") {
+              const y = selectedDate.getFullYear();
+              const m = String(selectedDate.getMonth() + 1).padStart(2, "0");
+              const d = String(selectedDate.getDate()).padStart(2, "0");
+              onChange(`${y}-${m}-${d}`);
+            }
+          }}
+        />
+      )}
+    </>
   );
 }
 
