@@ -10,6 +10,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import DateTimePicker from "@react-native-community/datetimepicker";
 
 import { Icon } from "@/components/Icon";
 import { useColors } from "@/hooks/useColors";
@@ -258,7 +259,17 @@ export function NewBookingForm({
   useEffect(() => {
     if (!visible) return;
     const next = isEditMode ? mergeInitialData(initialData) : emptyForm();
-    setForm(next);
+    const nextAirStep =
+      next.mode === "Air"
+        ? (() => {
+            if (next.air.step4.airlineRepVerified) return 4;
+            if (next.air.step3.warehouseRepVerified) return 3;
+            if (next.air.step2.repVerified) return 2;
+            if (next.air.step1.pickupVerified) return 1;
+            return 0;
+          })()
+        : next.airStep;
+    setForm({ ...next, airStep: nextAirStep });
     setPlateNumber("");
     airFieldsHeight.setValue(next.mode === "Air" ? 1 : 0);
   }, [visible, isEditMode, initialData, airFieldsHeight]);
@@ -825,20 +836,16 @@ export function NewBookingForm({
                     }}
                   >
                     <StepFormRow label="ARRIVAL DATE" style={{ width: "48%" }}>
-                      <TextInput
-                        style={[
-                          styles.formInput,
-                          inputStyle(colors, false, !isAirStepEditable(0)),
-                        ]}
+                      <DatePickerField
                         value={form.air.step1.arrivalDate}
-                        onChangeText={(v) =>
+                        onChange={(v) =>
                           updateAirStep("step1", "arrivalDate", v)
                         }
                         editable={isAirStepEditable(0)}
                       />
                     </StepFormRow>
                     <StepFormRow label="ARRIVAL TIME" style={{ width: "48%" }}>
-                      <MilitaryTimeInput
+                      <TimePickerField
                         value={form.air.step1.arrivalTime}
                         onChange={(v) =>
                           updateAirStep("step1", "arrivalTime", v)
@@ -1002,18 +1009,14 @@ export function NewBookingForm({
                     }}
                   >
                     <StepFormRow label="DATE" style={{ width: "48%" }}>
-                      <TextInput
-                        style={[
-                          styles.formInput,
-                          inputStyle(colors, false, !isAirStepEditable(1)),
-                        ]}
+                      <DatePickerField
                         value={form.air.step2.date}
-                        onChangeText={(v) => updateAirStep("step2", "date", v)}
+                        onChange={(v) => updateAirStep("step2", "date", v)}
                         editable={isAirStepEditable(1)}
                       />
                     </StepFormRow>
                     <StepFormRow label="TIME" style={{ width: "48%" }}>
-                      <MilitaryTimeInput
+                      <TimePickerField
                         value={form.air.step2.time}
                         onChange={(v) => updateAirStep("step2", "time", v)}
                         editable={isAirStepEditable(1)}
@@ -1146,18 +1149,14 @@ export function NewBookingForm({
                     }}
                   >
                     <StepFormRow label="DATE" style={{ width: "48%" }}>
-                      <TextInput
-                        style={[
-                          styles.formInput,
-                          inputStyle(colors, false, !isAirStepEditable(2)),
-                        ]}
+                      <DatePickerField
                         value={form.air.step3.date}
-                        onChangeText={(v) => updateAirStep("step3", "date", v)}
+                        onChange={(v) => updateAirStep("step3", "date", v)}
                         editable={isAirStepEditable(2)}
                       />
                     </StepFormRow>
                     <StepFormRow label="TIME" style={{ width: "48%" }}>
-                      <MilitaryTimeInput
+                      <TimePickerField
                         value={form.air.step3.time}
                         onChange={(v) => updateAirStep("step3", "time", v)}
                         editable={isAirStepEditable(2)}
@@ -1292,18 +1291,14 @@ export function NewBookingForm({
                     }}
                   >
                     <StepFormRow label="DATE" style={{ width: "48%" }}>
-                      <TextInput
-                        style={[
-                          styles.formInput,
-                          inputStyle(colors, false, !isAirStepEditable(3)),
-                        ]}
+                      <DatePickerField
                         value={form.air.step4.date}
-                        onChangeText={(v) => updateAirStep("step4", "date", v)}
+                        onChange={(v) => updateAirStep("step4", "date", v)}
                         editable={isAirStepEditable(3)}
                       />
                     </StepFormRow>
                     <StepFormRow label="TIME" style={{ width: "48%" }}>
-                      <MilitaryTimeInput
+                      <TimePickerField
                         value={form.air.step4.time}
                         onChange={(v) => updateAirStep("step4", "time", v)}
                         editable={isAirStepEditable(3)}
@@ -1551,6 +1546,128 @@ function StepCard({
         </View>
       )}
     </View>
+  );
+}
+
+function DatePickerField({
+  value,
+  onChange,
+  editable = true,
+  placeholder = "YYYY-MM-DD",
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  editable?: boolean;
+  placeholder?: string;
+}) {
+  const colors = useColors();
+  const [show, setShow] = useState(false);
+  const parsed = useMemo(() => {
+    if (!value) return new Date();
+    const d = new Date(value);
+    return isNaN(d.getTime()) ? new Date() : d;
+  }, [value]);
+
+  return (
+    <>
+      <TouchableOpacity
+        style={[
+          styles.formInput,
+          inputStyle(colors, false, !editable),
+          { justifyContent: "center" },
+        ]}
+        onPress={() => editable && setShow(true)}
+        disabled={!editable}
+        activeOpacity={editable ? 0.8 : 1}
+      >
+        <Text
+          style={{
+            color: value ? colors.foreground : colors.mutedForeground,
+          }}
+        >
+          {value || placeholder}
+        </Text>
+      </TouchableOpacity>
+      {show && (
+        <DateTimePicker
+          value={parsed}
+          mode="date"
+          display="default"
+          onChange={(event, selectedDate) => {
+            setShow(false);
+            if (selectedDate && event.type !== "dismissed") {
+              const y = selectedDate.getFullYear();
+              const m = String(selectedDate.getMonth() + 1).padStart(2, "0");
+              const d = String(selectedDate.getDate()).padStart(2, "0");
+              onChange(`${y}-${m}-${d}`);
+            }
+          }}
+        />
+      )}
+    </>
+  );
+}
+
+function TimePickerField({
+  value,
+  onChange,
+  editable = true,
+  placeholder = "1300h",
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  editable?: boolean;
+  placeholder?: string;
+}) {
+  const colors = useColors();
+  const [show, setShow] = useState(false);
+  const parsed = useMemo(() => {
+    const d = new Date();
+    const digits = value.replace(/\D/g, "").slice(0, 4);
+    if (digits.length >= 2) {
+      d.setHours(parseInt(digits.slice(0, 2), 10));
+      d.setMinutes(digits.length >= 4 ? parseInt(digits.slice(2, 4), 10) : 0);
+    }
+    return d;
+  }, [value]);
+
+  return (
+    <>
+      <TouchableOpacity
+        style={[
+          styles.formInput,
+          inputStyle(colors, false, !editable),
+          { justifyContent: "center" },
+        ]}
+        onPress={() => editable && setShow(true)}
+        disabled={!editable}
+        activeOpacity={editable ? 0.8 : 1}
+      >
+        <Text
+          style={{
+            color: value ? colors.foreground : colors.mutedForeground,
+          }}
+        >
+          {value || placeholder}
+        </Text>
+      </TouchableOpacity>
+      {show && (
+        <DateTimePicker
+          value={parsed}
+          mode="time"
+          is24Hour={true}
+          display="default"
+          onChange={(event, selectedDate) => {
+            setShow(false);
+            if (selectedDate && event.type !== "dismissed") {
+              const h = String(selectedDate.getHours()).padStart(2, "0");
+              const m = String(selectedDate.getMinutes()).padStart(2, "0");
+              onChange(`${h}${m}H`);
+            }
+          }}
+        />
+      )}
+    </>
   );
 }
 

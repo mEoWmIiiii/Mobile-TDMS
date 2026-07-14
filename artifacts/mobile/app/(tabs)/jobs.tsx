@@ -105,6 +105,13 @@ type PodPhase = "idle" | "capture" | "uploading" | "complete";
 const CIRC = 2 * Math.PI * 26; // circumference for r=26
 
 const PHASE_LABELS = ["Pick up", "Warehouse In", "Warehouse Out", "Acceptance"];
+const CARGO_STATUS_LABELS = [
+  "Pick Up",
+  "Warehouse In",
+  "Warehouse Out",
+  "Acceptance by Airline",
+  "Accepted",
+];
 
 export default function JobsScreen() {
   const colors = useColors();
@@ -612,7 +619,7 @@ export default function JobsScreen() {
     })();
     const nextLabel = phase >= 4 ? "Completed" : `Next: ${PHASE_LABELS[phase]}`;
     const air = localAirForms[job.id];
-    const pickupStatus = air?.step1.pickupVerified ? "Picked Up" : "Pending";
+    const cargoStatus = CARGO_STATUS_LABELS[phase] ?? "Pick Up";
 
     return (
       <View
@@ -697,7 +704,7 @@ export default function JobsScreen() {
                     label="Pickup Driver"
                     value={job.driver && job.driver !== "TBD" ? job.driver : "Not Assigned"}
                   />
-                  <DetailItem label="Pickup Status" value={pickupStatus} />
+                  <DetailItem label="Cargo Status" value={cargoStatus} />
                 </>
               ) : (
                 <>
