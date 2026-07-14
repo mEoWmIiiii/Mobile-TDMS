@@ -345,7 +345,7 @@ export function NewBookingForm({
     const nextAirStep =
       next.mode === "Air"
         ? (() => {
-            if (next.air.step4.airlineRepVerified) return 4;
+            if (next.air.step4.airlineRepVerified) return 3;
             if (next.air.step3.warehouseRepVerified) return 3;
             if (next.air.step2.repVerified) return 2;
             if (next.air.step1.pickupVerified) return 1;
