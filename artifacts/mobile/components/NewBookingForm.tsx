@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import {
+  Alert,
   Animated,
   Easing,
   ScrollView,
@@ -370,6 +371,18 @@ export function NewBookingForm({
     });
 
   const save = () => onSubmit(form);
+
+  const confirmVerify = (onConfirm: () => void) => {
+    Alert.alert(
+      "Confirm Verification",
+      "Please review all the information before confirming. Once verified, this step will become read-only and cannot be edited.",
+      [
+        { text: "Cancel", style: "cancel" },
+        { text: "Confirm", onPress: onConfirm },
+      ],
+      { cancelable: true }
+    );
+  };
 
   const airHeight = airFieldsHeight.interpolate({
     inputRange: [0, 1],
@@ -772,6 +785,36 @@ export function NewBookingForm({
                 role="Driver"
                 roleBg="#E8772220"
                 roleText="#E87722"
+                footer={
+                  <TouchableOpacity
+                    style={[
+                      styles.stampBtn,
+                      {
+                        marginTop: 12,
+                        backgroundColor: form.air.step1.pickupVerified
+                          ? "#059669"
+                          : colors.primary,
+                        opacity: !isAirStepEditable(0) ? 0.6 : 1,
+                      },
+                    ]}
+                    onPress={() =>
+                      confirmVerify(() =>
+                        updateAirStep(
+                          "step1",
+                          "pickupVerified",
+                          !form.air.step1.pickupVerified,
+                        )
+                      )
+                    }
+                    disabled={!isAirStepEditable(0)}
+                  >
+                    <Text style={styles.stampBtnText}>
+                      {form.air.step1.pickupVerified
+                        ? "Pickup Confirmed"
+                        : "Confirm Pickup"}
+                    </Text>
+                  </TouchableOpacity>
+                }
               >
                 <View style={styles.stepCol}>
                   <View
@@ -910,32 +953,6 @@ export function NewBookingForm({
                     editable={form.air.step1.remarksChecked && isAirStepEditable(0)}
                     placeholder="Enter remarks..."
                   />
-                  <TouchableOpacity
-                    style={[
-                      styles.stampBtn,
-                      {
-                        marginTop: 12,
-                        backgroundColor: form.air.step1.pickupVerified
-                          ? "#059669"
-                          : colors.primary,
-                        opacity: !isAirStepEditable(0) ? 0.6 : 1,
-                      },
-                    ]}
-                    onPress={() =>
-                      updateAirStep(
-                        "step1",
-                        "pickupVerified",
-                        !form.air.step1.pickupVerified,
-                      )
-                    }
-                    disabled={!isAirStepEditable(0)}
-                  >
-                    <Text style={styles.stampBtnText}>
-                      {form.air.step1.pickupVerified
-                        ? "Pickup Confirmed"
-                        : "Confirm Pickup"}
-                    </Text>
-                  </TouchableOpacity>
                 </View>
               </StepCard>
             )}
@@ -945,6 +962,36 @@ export function NewBookingForm({
                 role="WH In"
                 roleBg="#0A1F4C20"
                 roleText="#0A1F4C"
+                footer={
+                  <TouchableOpacity
+                    style={[
+                      styles.stampBtn,
+                      {
+                        marginTop: 8,
+                        backgroundColor: form.air.step2.repVerified
+                          ? "#059669"
+                          : colors.primary,
+                        opacity: !isAirStepEditable(1) ? 0.6 : 1,
+                      },
+                    ]}
+                    onPress={() =>
+                      confirmVerify(() =>
+                        updateAirStep(
+                          "step2",
+                          "repVerified",
+                          !form.air.step2.repVerified,
+                        )
+                      )
+                    }
+                    disabled={!isAirStepEditable(1)}
+                  >
+                    <Text style={styles.stampBtnText}>
+                      {form.air.step2.repVerified
+                        ? "Verified"
+                        : "Verify & Stamp"}
+                    </Text>
+                  </TouchableOpacity>
+                }
               >
                 <View style={styles.stepCol}>
                   <View
@@ -1050,32 +1097,6 @@ export function NewBookingForm({
                     placeholder="Input your full name to stamp"
                     placeholderTextColor={colors.mutedForeground}
                   />
-                  <TouchableOpacity
-                    style={[
-                      styles.stampBtn,
-                      {
-                        marginTop: 8,
-                        backgroundColor: form.air.step2.repVerified
-                          ? "#059669"
-                          : colors.primary,
-                        opacity: !isAirStepEditable(1) ? 0.6 : 1,
-                      },
-                    ]}
-                    onPress={() =>
-                      updateAirStep(
-                        "step2",
-                        "repVerified",
-                        !form.air.step2.repVerified,
-                      )
-                    }
-                    disabled={!isAirStepEditable(1)}
-                  >
-                    <Text style={styles.stampBtnText}>
-                      {form.air.step2.repVerified
-                        ? "Verified"
-                        : "Verify & Stamp"}
-                    </Text>
-                  </TouchableOpacity>
                 </View>
               </StepCard>
             )}
@@ -1085,6 +1106,36 @@ export function NewBookingForm({
                 role="WH Out"
                 roleBg="#0A1F4C20"
                 roleText="#0A1F4C"
+                footer={
+                  <TouchableOpacity
+                    style={[
+                      styles.stampBtn,
+                      {
+                        marginTop: 8,
+                        backgroundColor: form.air.step3.warehouseRepVerified
+                          ? "#059669"
+                          : colors.primary,
+                        opacity: !isAirStepEditable(2) ? 0.6 : 1,
+                      },
+                    ]}
+                    onPress={() =>
+                      confirmVerify(() =>
+                        updateAirStep(
+                          "step3",
+                          "warehouseRepVerified",
+                          !form.air.step3.warehouseRepVerified,
+                        )
+                      )
+                    }
+                    disabled={!isAirStepEditable(2)}
+                  >
+                    <Text style={styles.stampBtnText}>
+                      {form.air.step3.warehouseRepVerified
+                        ? "Stamped"
+                        : "Verify & Stamp"}
+                    </Text>
+                  </TouchableOpacity>
+                }
               >
                 <View style={styles.stepCol}>
                   <View
@@ -1192,32 +1243,6 @@ export function NewBookingForm({
                     placeholder="Input your full name to stamp"
                     placeholderTextColor={colors.mutedForeground}
                   />
-                  <TouchableOpacity
-                    style={[
-                      styles.stampBtn,
-                      {
-                        marginTop: 8,
-                        backgroundColor: form.air.step3.warehouseRepVerified
-                          ? "#059669"
-                          : colors.primary,
-                        opacity: !isAirStepEditable(2) ? 0.6 : 1,
-                      },
-                    ]}
-                    onPress={() =>
-                      updateAirStep(
-                        "step3",
-                        "warehouseRepVerified",
-                        !form.air.step3.warehouseRepVerified,
-                      )
-                    }
-                    disabled={!isAirStepEditable(2)}
-                  >
-                    <Text style={styles.stampBtnText}>
-                      {form.air.step3.warehouseRepVerified
-                        ? "Stamped"
-                        : "Verify & Stamp"}
-                    </Text>
-                  </TouchableOpacity>
                 </View>
               </StepCard>
             )}
@@ -1227,6 +1252,36 @@ export function NewBookingForm({
                 role="Airline Rep"
                 roleBg="#E8772220"
                 roleText="#E87722"
+                footer={
+                  <TouchableOpacity
+                    style={[
+                      styles.stampBtn,
+                      {
+                        marginTop: 8,
+                        backgroundColor: form.air.step4.airlineRepVerified
+                          ? "#059669"
+                          : colors.primary,
+                        opacity: !isAirStepEditable(3) ? 0.6 : 1,
+                      },
+                    ]}
+                    onPress={() =>
+                      confirmVerify(() =>
+                        updateAirStep(
+                          "step4",
+                          "airlineRepVerified",
+                          !form.air.step4.airlineRepVerified,
+                        )
+                      )
+                    }
+                    disabled={!isAirStepEditable(3)}
+                  >
+                    <Text style={styles.stampBtnText}>
+                      {form.air.step4.airlineRepVerified
+                        ? "Stamped"
+                        : "Verify & Stamp"}
+                    </Text>
+                  </TouchableOpacity>
+                }
               >
                 <View style={styles.stepCol}>
                   <View
@@ -1351,32 +1406,6 @@ export function NewBookingForm({
                     placeholder="Input your full name to stamp"
                     placeholderTextColor={colors.mutedForeground}
                   />
-                  <TouchableOpacity
-                    style={[
-                      styles.stampBtn,
-                      {
-                        marginTop: 8,
-                        backgroundColor: form.air.step4.airlineRepVerified
-                          ? "#059669"
-                          : colors.primary,
-                        opacity: !isAirStepEditable(3) ? 0.6 : 1,
-                      },
-                    ]}
-                    onPress={() =>
-                      updateAirStep(
-                        "step4",
-                        "airlineRepVerified",
-                        !form.air.step4.airlineRepVerified,
-                      )
-                    }
-                    disabled={!isAirStepEditable(3)}
-                  >
-                    <Text style={styles.stampBtnText}>
-                      {form.air.step4.airlineRepVerified
-                        ? "Stamped"
-                        : "Verify & Stamp"}
-                    </Text>
-                  </TouchableOpacity>
                 </View>
               </StepCard>
             )}
@@ -1488,12 +1517,14 @@ function StepCard({
   roleBg,
   roleText,
   children,
+  footer,
 }: {
   title: string;
   role: string;
   roleBg: string;
   roleText: string;
   children: React.ReactNode;
+  footer?: React.ReactNode;
 }) {
   const colors = useColors();
   return (
@@ -1514,6 +1545,11 @@ function StepCard({
         </View>
       </View>
       <View style={styles.stepBody}>{children}</View>
+      {footer && (
+        <View style={{ paddingHorizontal: 12, paddingBottom: 12 }}>
+          {footer}
+        </View>
+      )}
     </View>
   );
 }
