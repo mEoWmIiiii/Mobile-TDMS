@@ -1484,8 +1484,8 @@ export function NewBookingForm({
                               <Barcode
                                 value={form.air.step4.mawb}
                                 format="CODE128"
-                                height={48}
-                                maxWidth={120}
+                                height={64}
+                                maxWidth={156}
                                 singleBarWidth={2}
                                 lineColor="#000000"
                                 backgroundColor="#FFFFFF"
@@ -2355,7 +2355,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   cargoTagInput: {
-    height: 52,
+    height: 56,
     paddingHorizontal: 12,
     borderRadius: 8,
     borderWidth: 1,
@@ -2364,17 +2364,21 @@ const styles = StyleSheet.create({
   },
   cargoTagDivider: { width: 1, marginVertical: 4 },
   cargoTagBarcodeCol: {
-    flex: 1.4,
+    width: 180,
     justifyContent: "center",
     alignItems: "center",
   },
   cargoTagBarcodePanel: {
     backgroundColor: "#FFFFFF",
     borderRadius: 10,
-    padding: 10,
+    padding: 12,
+    paddingLeft: 14,
     alignItems: "center",
-    gap: 8,
+    gap: 10,
     width: "100%",
+    borderLeftWidth: 2,
+    borderLeftColor: "#E2E8F0",
+    borderStyle: "dashed",
   },
   cargoTagBarcodeWrapper: {
     width: "100%",
@@ -2383,7 +2387,7 @@ const styles = StyleSheet.create({
   },
   cargoTagBarcodeValue: {
     fontFamily: "monospace",
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: "700" as const,
     color: "#0A1F4C",
     letterSpacing: 0.5,
