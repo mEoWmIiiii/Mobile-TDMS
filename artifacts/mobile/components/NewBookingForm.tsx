@@ -2,7 +2,9 @@ import React, { useEffect, useMemo, useState } from "react";
 import {
   Alert,
   Animated,
+  Dimensions,
   Easing,
+  Modal,
   ScrollView,
   StyleSheet,
   Text,
@@ -11,6 +13,8 @@ import {
   View,
 } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
+import Barcode from "react-native-barcode-svg";
+import * as Brightness from "expo-brightness";
 
 import { Icon } from "@/components/Icon";
 import { useColors } from "@/hooks/useColors";
@@ -338,6 +342,8 @@ export function NewBookingForm({
   const [form, setForm] = useState<FormState>(emptyForm());
   const [plateNumber, setPlateNumber] = useState("");
   const [airFieldsHeight] = useState(() => new Animated.Value(0));
+  const [barcodeModal, setBarcodeModal] = useState(false);
+  const [originalBrightness, setOriginalBrightness] = useState<number | null>(null);
 
   useEffect(() => {
     if (!visible) return;
@@ -483,6 +489,29 @@ export function NewBookingForm({
     });
 
   const save = () => onSubmit(form);
+
+  const openBarcode = async () => {
+    if (!form.air.step4.mawb) return;
+    setBarcodeModal(true);
+    try {
+      const { status } = await Brightness.requestPermissionsAsync();
+      if (status === "granted") {
+        const current = await Brightness.getBrightnessAsync();
+        setOriginalBrightness(current);
+        await Brightness.setBrightnessAsync(1);
+      }
+    } catch {
+      // ignore brightness errors
+    }
+  };
+
+  const closeBarcode = () => {
+    setBarcodeModal(false);
+    if (originalBrightness !== null) {
+      Brightness.setBrightnessAsync(originalBrightness).catch(() => {});
+      setOriginalBrightness(null);
+    }
+  };
 
   const confirmVerify = (onConfirm: () => void) => {
     Alert.alert(
@@ -1408,6 +1437,51 @@ export function NewBookingForm({
                     onChangeText={(v) => updateAirStep("step4", "mawb", v)}
                     editable={isAirStepEditable(3)}
                   />
+                  {form.air.step4.mawb ? (
+                    <TouchableOpacity
+                      onPress={openBarcode}
+                      activeOpacity={0.8}
+                      style={{ marginTop: 12, alignItems: "center" }}
+                    >
+                      <Text
+                        style={[
+                          styles.sectionTitle,
+                          { color: "#64748B", marginBottom: 8 },
+                        ]}
+                      >
+                        Scan Barcode
+                      </Text>
+                      <Barcode
+                        value={form.air.step4.mawb}
+                        format="CODE128"
+                        height={60}
+                        maxWidth={260}
+                        singleBarWidth={2}
+                        lineColor={colors.foreground}
+                        backgroundColor={colors.background}
+                        onError={() => {}}
+                      />
+                      <Text
+                        style={{
+                          color: colors.mutedForeground,
+                          fontSize: 11,
+                          marginTop: 6,
+                        }}
+                      >
+                        Tap to enlarge
+                      </Text>
+                    </TouchableOpacity>
+                  ) : (
+                    <Text
+                      style={{
+                        color: colors.mutedForeground,
+                        fontSize: 12,
+                        marginTop: 12,
+                      }}
+                    >
+                      Barcode unavailable
+                    </Text>
+                  )}
                   <Text
                     style={[
                       styles.sectionTitle,
@@ -1593,6 +1667,57 @@ export function NewBookingForm({
           </Text>
         </TouchableOpacity>
       </View>
+
+      <Modal
+        visible={barcodeModal}
+        transparent={false}
+        animationType="fade"
+        onRequestClose={closeBarcode}
+      >
+        <View
+          style={[
+            styles.barcodeModalRoot,
+            { backgroundColor: colors.background },
+          ]}
+        >
+          <View style={styles.barcodeModalHeader}>
+            <TouchableOpacity
+              onPress={closeBarcode}
+              style={styles.barcodeModalClose}
+            >
+              <Icon name="x" size={28} color={colors.foreground} />
+            </TouchableOpacity>
+          </View>
+          <View style={styles.barcodeModalBody}>
+            <Barcode
+              value={form.air.step4.mawb}
+              format="CODE128"
+              height={140}
+              maxWidth={Dimensions.get("window").width - 48}
+              singleBarWidth={3}
+              lineColor={colors.foreground}
+              backgroundColor={colors.background}
+              onError={() => {}}
+            />
+            <Text
+              style={[
+                styles.barcodeModalLabel,
+                { color: colors.mutedForeground },
+              ]}
+            >
+              MAWB
+            </Text>
+            <Text
+              style={[
+                styles.barcodeModalValue,
+                { color: colors.foreground },
+              ]}
+            >
+              {form.air.step4.mawb}
+            </Text>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -2173,4 +2298,28 @@ const styles = StyleSheet.create({
   checkLabel: { fontSize: 12, fontWeight: "500" as const, flex: 1 },
   stampBtn: { paddingVertical: 12, borderRadius: 10, alignItems: "center" },
   stampBtnText: { color: "#fff", fontSize: 13, fontWeight: "700" as const },
+  barcodeModalRoot: { flex: 1, padding: 24 },
+  barcodeModalHeader: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    paddingTop: 20,
+  },
+  barcodeModalClose: { padding: 8 },
+  barcodeModalBody: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 16,
+  },
+  barcodeModalLabel: {
+    fontSize: 12,
+    fontWeight: "600" as const,
+    textTransform: "uppercase" as const,
+    letterSpacing: 0.5,
+  },
+  barcodeModalValue: {
+    fontSize: 20,
+    fontWeight: "700" as const,
+    textAlign: "center",
+  },
 });

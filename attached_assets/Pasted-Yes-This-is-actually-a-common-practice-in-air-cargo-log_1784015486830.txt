@@ -1,0 +1,75 @@
+Yes. This is actually a common practice in air cargo logistics. Many airlines and ground handlers use **barcode or QR code scanning** to retrieve shipment information from a mobile device instead of scanning a paper MAWB, which can get folded, scratched, or damaged.
+
+For a **MAWB (Master Air Waybill)**, I recommend using a **Code 128 barcode** because:
+
+* It's the industry standard for logistics and shipping.
+* It supports alphanumeric MAWB numbers (e.g., `176-12345675`).
+* Most handheld scanners and mobile barcode scanner apps can read it.
+* It's more appropriate than a QR code if the airline's scanners already expect a linear barcode.
+
+You can also include a QR code as a secondary option for mobile users, but the primary barcode should be **Code 128**.
+
+---
+
+## Credit-saving Replit Prompt
+
+**Add a scannable MAWB barcode to Step 4 (Acceptance) without changing the existing UI.**
+
+### Requirements
+
+* Generate a **Code 128 barcode** automatically from the MAWB Number.
+* Display the barcode beside or below the MAWB field in **Step 4 – Acceptance**.
+* The barcode should update automatically whenever the MAWB changes.
+* If no MAWB has been entered, hide the barcode or display "Barcode unavailable."
+
+### Scanning
+
+* The barcode must be readable from another phone or a standard barcode scanner.
+* The goal is for airline representatives to scan directly from the driver's phone instead of scanning the printed MAWB document.
+
+### Optional
+
+If possible, also generate a small QR code containing:
+
+* MAWB Number
+* HAWB Number
+* Shipment ID
+
+The QR code is optional and should not replace the Code 128 barcode.
+
+### UI
+
+* Keep the current Step 4 layout.
+* Do not redesign the card.
+* Add a **"Scan Barcode"** section under or beside the MAWB field.
+* The barcode should be centered and large enough for reliable scanning.
+* Add a small **Expand** icon or **Tap to Enlarge** action that opens the barcode in a full-screen modal for easier scanning.
+
+### Behavior
+
+* Barcode updates automatically when the MAWB changes.
+* Barcode is read-only.
+* Full-screen view should maximize brightness (if supported) to improve scan reliability.
+* Works both online and offline since it is generated locally.
+
+### Do not change
+
+* Step workflow
+* Verification logic
+* Navigation
+* Existing styling
+* Card layout
+
+Only add barcode generation and display for the MAWB in the Acceptance step.
+
+---
+
+### Additional recommendation
+
+Since your system is already mobile-first, I'd also recommend adding a **full-screen barcode viewer**. When the airline rep taps the barcode, it opens in a clean, full-screen view showing:
+
+* Large Code 128 barcode
+* MAWB number beneath it
+* Maximum screen brightness (where supported)
+
+This significantly improves scan success and is commonly used in warehouse and airline operations.
