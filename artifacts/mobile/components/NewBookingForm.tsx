@@ -1425,63 +1425,95 @@ export function NewBookingForm({
                       }
                     />
                   </StepFormRow>
-                  <Text style={[styles.sectionTitle, { color: "#64748B" }]}>
-                    MAWB
-                  </Text>
-                  <TextInput
+                  <View
                     style={[
-                      styles.formInput,
-                      inputStyle(colors, false, !isAirStepEditable(3)),
+                      styles.cargoTagCard,
+                      {
+                        backgroundColor: colors.card,
+                        borderColor: colors.border,
+                      },
                     ]}
-                    value={form.air.step4.mawb}
-                    onChangeText={(v) => updateAirStep("step4", "mawb", v)}
-                    editable={isAirStepEditable(3)}
-                  />
-                  {form.air.step4.mawb ? (
-                    <TouchableOpacity
-                      onPress={openBarcode}
-                      activeOpacity={0.8}
-                      style={{ marginTop: 12, alignItems: "center" }}
-                    >
+                  >
+                    <View style={styles.cargoTagHeader}>
+                      <Icon name="tag" size={16} color={colors.primary} />
                       <Text
                         style={[
-                          styles.sectionTitle,
-                          { color: "#64748B", marginBottom: 8 },
+                          styles.cargoTagHeaderText,
+                          { color: colors.foreground },
                         ]}
                       >
-                        Scan Barcode
+                        Master Air Waybill
                       </Text>
-                      <Barcode
-                        value={form.air.step4.mawb}
-                        format="CODE128"
-                        height={60}
-                        maxWidth={260}
-                        singleBarWidth={2}
-                        lineColor={colors.foreground}
-                        backgroundColor={colors.background}
-                        onError={() => {}}
+                    </View>
+                    <View style={styles.cargoTagBody}>
+                      <View style={styles.cargoTagInputCol}>
+                        <Text
+                          style={[
+                            styles.cargoTagLabel,
+                            { color: colors.mutedForeground },
+                          ]}
+                        >
+                          MAWB
+                        </Text>
+                        <TextInput
+                          style={[
+                            styles.cargoTagInput,
+                            inputStyle(colors, false, !isAirStepEditable(3)),
+                          ]}
+                          value={form.air.step4.mawb}
+                          onChangeText={(v) =>
+                            updateAirStep("step4", "mawb", v)
+                          }
+                          editable={isAirStepEditable(3)}
+                        />
+                      </View>
+                      <View
+                        style={[
+                          styles.cargoTagDivider,
+                          { backgroundColor: colors.border },
+                        ]}
                       />
-                      <Text
-                        style={{
-                          color: colors.mutedForeground,
-                          fontSize: 11,
-                          marginTop: 6,
-                        }}
-                      >
-                        Tap to enlarge
-                      </Text>
-                    </TouchableOpacity>
-                  ) : (
-                    <Text
-                      style={{
-                        color: colors.mutedForeground,
-                        fontSize: 12,
-                        marginTop: 12,
-                      }}
-                    >
-                      Barcode unavailable
-                    </Text>
-                  )}
+                      <View style={styles.cargoTagBarcodeCol}>
+                        {form.air.step4.mawb ? (
+                          <TouchableOpacity
+                            onPress={openBarcode}
+                            activeOpacity={0.8}
+                            style={styles.cargoTagBarcodePanel}
+                          >
+                            <Barcode
+                              value={form.air.step4.mawb}
+                              format="CODE128"
+                              height={54}
+                              maxWidth={160}
+                              singleBarWidth={2}
+                              lineColor="#000000"
+                              backgroundColor="#FFFFFF"
+                              onError={() => {}}
+                            />
+                            <Text style={styles.cargoTagBarcodeValue}>
+                              {form.air.step4.mawb}
+                            </Text>
+                          </TouchableOpacity>
+                        ) : (
+                          <View style={styles.cargoTagPlaceholder}>
+                            <Icon
+                              name="tag"
+                              size={28}
+                              color={colors.mutedForeground}
+                            />
+                            <Text
+                              style={[
+                                styles.cargoTagPlaceholderText,
+                                { color: colors.mutedForeground },
+                              ]}
+                            >
+                              Awaiting MAWB
+                            </Text>
+                          </View>
+                        )}
+                      </View>
+                    </View>
+                  </View>
                   <Text
                     style={[
                       styles.sectionTitle,
@@ -2298,6 +2330,65 @@ const styles = StyleSheet.create({
   checkLabel: { fontSize: 12, fontWeight: "500" as const, flex: 1 },
   stampBtn: { paddingVertical: 12, borderRadius: 10, alignItems: "center" },
   stampBtnText: { color: "#fff", fontSize: 13, fontWeight: "700" as const },
+  cargoTagCard: {
+    borderRadius: 12,
+    borderWidth: 1,
+    padding: 14,
+    gap: 12,
+    marginTop: 4,
+    marginBottom: 4,
+  },
+  cargoTagHeader: { flexDirection: "row", alignItems: "center", gap: 8 },
+  cargoTagHeaderText: {
+    fontSize: 13,
+    fontWeight: "700" as const,
+    letterSpacing: 0.3,
+  },
+  cargoTagBody: { flexDirection: "row", gap: 12, alignItems: "stretch" },
+  cargoTagInputCol: { flex: 1, gap: 8, justifyContent: "center" },
+  cargoTagLabel: {
+    fontSize: 12,
+    fontWeight: "600" as const,
+    textTransform: "uppercase" as const,
+    letterSpacing: 0.5,
+  },
+  cargoTagInput: {
+    height: 52,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    fontSize: 15,
+    fontWeight: "600" as const,
+  },
+  cargoTagDivider: { width: 1, marginVertical: 4 },
+  cargoTagBarcodeCol: {
+    flex: 1.2,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  cargoTagBarcodePanel: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 10,
+    padding: 12,
+    alignItems: "center",
+    gap: 8,
+    width: "100%",
+  },
+  cargoTagBarcodeValue: {
+    fontFamily: "monospace",
+    fontSize: 11,
+    fontWeight: "700" as const,
+    color: "#0A1F4C",
+    letterSpacing: 0.5,
+    textAlign: "center",
+  },
+  cargoTagPlaceholder: {
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    paddingVertical: 16,
+  },
+  cargoTagPlaceholderText: { fontSize: 12, fontWeight: "600" as const, textAlign: "center" },
   barcodeModalRoot: { flex: 1, padding: 24 },
   barcodeModalHeader: {
     flexDirection: "row",

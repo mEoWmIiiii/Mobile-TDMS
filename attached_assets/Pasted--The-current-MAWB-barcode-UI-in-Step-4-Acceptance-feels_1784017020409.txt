@@ -1,0 +1,139 @@
+
+
+
+
+The current MAWB barcode UI in **Step 4 – Acceptance** feels visually disconnected from the rest of the form. Please improve its layout while **keeping the existing functionality and workflow unchanged**.
+
+
+
+### Requirements
+
+
+
+* Only modify the **MAWB section** in **Step 4**.
+
+* Do **not** change any form logic, state bindings, barcode generation, verification flow, or step navigation.
+
+
+
+### Layout
+
+
+
+* Combine the **MAWB input** and **barcode** into a single cohesive "Cargo Tag" card.
+
+* The card should feel like one component rather than separate elements.
+
+* Keep the MAWB input on the left and the barcode on the right.
+
+* Add a subtle divider or visual separation between them.
+
+* Use the app's existing colors, spacing, borders, and rounded corners so it blends naturally with the rest of the interface.
+
+
+
+### Barcode
+
+
+
+* If a MAWB exists:
+
+
+
+  * Display the barcode inside a clean white panel.
+
+  * Show the MAWB number below the barcode using a small monospace font.
+
+  * Ensure the barcode has enough padding and whitespace for easy scanning.
+
+
+
+* If the MAWB is empty:
+
+
+
+  * Display a clean placeholder (icon + "Awaiting MAWB") instead of an empty barcode area.
+
+
+
+### Design Goals
+
+
+
+The component should resemble a modern airline cargo tag:
+
+
+
+* Clean
+
+* Balanced
+
+* Compact
+
+* Professional
+
+* Consistent with the application's design language
+
+
+
+Avoid making the barcode look like it was simply inserted into the form.
+
+
+
+### Constraints
+
+
+
+* Keep all existing bindings:
+
+
+
+  * `form.air.step4.mawb`
+
+  * `onChangeText`
+
+  * `editable={!isStepLocked(3)}`
+
+* Do not modify any verification logic or state management.
+
+* Add only the necessary JSX changes and new StyleSheet classes.
+
+* Do not rewrite unrelated code.
+
+
+
+---
+
+
+
+## One suggestion I'd add
+
+
+
+Instead of trying to make the barcode fit **inside** the form, I'd make it look like a **boarding pass or cargo label**.
+
+
+
+```
+
+┌────────────────────────────────────────────┐
+
+│ MAWB                                       │
+
+│ ┌─────────────────────┐  ████████████████  │
+
+│ │ 176-12345678        │  █ █ █ █ █ █ █ █   │
+
+│ └─────────────────────┘  176-12345678      │
+
+│                                            │
+
+│ Master Air Waybill                         │
+
+└────────────────────────────────────────────┘
+
+```
+
+
+
+This style is much closer to what airline and cargo staff are accustomed to seeing, and it tends to look far more intentional than embedding a barcode beside an input field.
