@@ -1480,16 +1480,18 @@ export function NewBookingForm({
                             activeOpacity={0.8}
                             style={styles.cargoTagBarcodePanel}
                           >
-                            <Barcode
-                              value={form.air.step4.mawb}
-                              format="CODE128"
-                              height={54}
-                              maxWidth={160}
-                              singleBarWidth={2}
-                              lineColor="#000000"
-                              backgroundColor="#FFFFFF"
-                              onError={() => {}}
-                            />
+                            <View style={styles.cargoTagBarcodeWrapper}>
+                              <Barcode
+                                value={form.air.step4.mawb}
+                                format="CODE128"
+                                height={48}
+                                maxWidth={120}
+                                singleBarWidth={2}
+                                lineColor="#000000"
+                                backgroundColor="#FFFFFF"
+                                onError={() => {}}
+                              />
+                            </View>
                             <Text style={styles.cargoTagBarcodeValue}>
                               {form.air.step4.mawb}
                             </Text>
@@ -2344,7 +2346,7 @@ const styles = StyleSheet.create({
     fontWeight: "700" as const,
     letterSpacing: 0.3,
   },
-  cargoTagBody: { flexDirection: "row", gap: 12, alignItems: "stretch" },
+  cargoTagBody: { flexDirection: "row", gap: 16, alignItems: "stretch" },
   cargoTagInputCol: { flex: 1, gap: 8, justifyContent: "center" },
   cargoTagLabel: {
     fontSize: 12,
@@ -2362,17 +2364,22 @@ const styles = StyleSheet.create({
   },
   cargoTagDivider: { width: 1, marginVertical: 4 },
   cargoTagBarcodeCol: {
-    flex: 1.2,
+    flex: 1.4,
     justifyContent: "center",
     alignItems: "center",
   },
   cargoTagBarcodePanel: {
     backgroundColor: "#FFFFFF",
     borderRadius: 10,
-    padding: 12,
+    padding: 10,
     alignItems: "center",
     gap: 8,
     width: "100%",
+  },
+  cargoTagBarcodeWrapper: {
+    width: "100%",
+    alignItems: "center",
+    overflow: "hidden",
   },
   cargoTagBarcodeValue: {
     fontFamily: "monospace",
