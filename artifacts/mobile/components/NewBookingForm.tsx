@@ -2335,8 +2335,7 @@ const styles = StyleSheet.create({
   stampBtnText: { color: "#fff", fontSize: 13, fontWeight: "700" as const },
   cargoTagInputWrapper: { width: "100%", marginBottom: 12 },
   cargoTagCard: {
-    width: "90%",
-    alignSelf: "center",
+    width: "100%",
     borderRadius: 16,
     borderWidth: 1,
     padding: 20,
