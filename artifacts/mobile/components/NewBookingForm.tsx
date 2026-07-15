@@ -10,7 +10,6 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  useWindowDimensions,
   View,
 } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
@@ -345,8 +344,6 @@ export function NewBookingForm({
   const [airFieldsHeight] = useState(() => new Animated.Value(0));
   const [barcodeModal, setBarcodeModal] = useState(false);
   const [originalBrightness, setOriginalBrightness] = useState<number | null>(null);
-  const { width: screenWidth } = useWindowDimensions();
-  const isWideCargoTag = screenWidth >= 520;
 
   useEffect(() => {
     if (!visible) return;
@@ -1428,6 +1425,26 @@ export function NewBookingForm({
                       }
                     />
                   </StepFormRow>
+                  <View style={styles.cargoTagInputWrapper}>
+                    <Text
+                      style={[
+                        styles.cargoTagLabel,
+                        { color: colors.mutedForeground },
+                      ]}
+                    >
+                      MAWB
+                    </Text>
+                    <TextInput
+                      style={[
+                        styles.cargoTagInput,
+                        inputStyle(colors, false, !isAirStepEditable(3)),
+                      ]}
+                      value={form.air.step4.mawb}
+                      onChangeText={(v) => updateAirStep("step4", "mawb", v)}
+                      editable={isAirStepEditable(3)}
+                      placeholder="Enter MAWB..."
+                    />
+                  </View>
                   <View
                     style={[
                       styles.cargoTagCard,
@@ -1448,60 +1465,17 @@ export function NewBookingForm({
                         Master Air Waybill
                       </Text>
                     </View>
-                    <View
-                      style={[
-                        styles.cargoTagBody,
-                        isWideCargoTag
-                          ? styles.cargoTagBodyRow
-                          : styles.cargoTagBodyColumn,
-                      ]}
-                    >
-                      <View
-                        style={[
-                          styles.cargoTagInputCol,
-                          isWideCargoTag
-                            ? styles.cargoTagInputColRow
-                            : styles.cargoTagInputColColumn,
-                        ]}
-                      >
-                        <Text
-                          style={[
-                            styles.cargoTagLabel,
-                            { color: colors.mutedForeground },
-                          ]}
-                        >
-                          MAWB
-                        </Text>
-                        <TextInput
-                          style={[
-                            styles.cargoTagInput,
-                            inputStyle(colors, false, !isAirStepEditable(3)),
-                          ]}
-                          value={form.air.step4.mawb}
-                          onChangeText={(v) =>
-                            updateAirStep("step4", "mawb", v)
-                          }
-                          editable={isAirStepEditable(3)}
-                        />
-                      </View>
-                      <View
-                        style={[
-                          styles.cargoTagDivider,
-                          { backgroundColor: colors.border },
-                          isWideCargoTag
-                            ? styles.cargoTagDividerRow
-                            : styles.cargoTagDividerColumn,
-                        ]}
-                      />
-                      <View
-                        style={[
-                          styles.cargoTagBarcodeCol,
-                          isWideCargoTag
-                            ? styles.cargoTagBarcodeColRow
-                            : styles.cargoTagBarcodeColColumn,
-                        ]}
-                      >
-                        {form.air.step4.mawb ? (
+                    <View style={styles.cargoTagBody}>
+                      {form.air.step4.mawb ? (
+                        <>
+                          <Text
+                            style={[
+                              styles.cargoTagMawbValue,
+                              { color: colors.foreground },
+                            ]}
+                          >
+                            {form.air.step4.mawb}
+                          </Text>
                           <TouchableOpacity
                             onPress={openBarcode}
                             activeOpacity={0.8}
@@ -1523,24 +1497,24 @@ export function NewBookingForm({
                               {form.air.step4.mawb}
                             </Text>
                           </TouchableOpacity>
-                        ) : (
-                          <View style={styles.cargoTagPlaceholder}>
-                            <Icon
-                              name="tag"
-                              size={28}
-                              color={colors.mutedForeground}
-                            />
-                            <Text
-                              style={[
-                                styles.cargoTagPlaceholderText,
-                                { color: colors.mutedForeground },
-                              ]}
-                            >
-                              Awaiting MAWB
-                            </Text>
-                          </View>
-                        )}
-                      </View>
+                        </>
+                      ) : (
+                        <View style={styles.cargoTagPlaceholder}>
+                          <Icon
+                            name="tag"
+                            size={28}
+                            color={colors.mutedForeground}
+                          />
+                          <Text
+                            style={[
+                              styles.cargoTagPlaceholderText,
+                              { color: colors.mutedForeground },
+                            ]}
+                          >
+                            Awaiting MAWB
+                          </Text>
+                        </View>
+                      )}
                     </View>
                   </View>
                   <Text
@@ -2359,31 +2333,41 @@ const styles = StyleSheet.create({
   checkLabel: { fontSize: 12, fontWeight: "500" as const, flex: 1 },
   stampBtn: { paddingVertical: 12, borderRadius: 10, alignItems: "center" },
   stampBtnText: { color: "#fff", fontSize: 13, fontWeight: "700" as const },
+  cargoTagInputWrapper: { width: "100%", marginBottom: 12 },
   cargoTagCard: {
-    borderRadius: 12,
+    width: "90%",
+    alignSelf: "center",
+    borderRadius: 16,
     borderWidth: 1,
-    padding: 14,
-    gap: 12,
+    padding: 20,
+    gap: 16,
     marginTop: 4,
-    marginBottom: 4,
+    marginBottom: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 4,
   },
-  cargoTagHeader: { flexDirection: "row", alignItems: "center", gap: 8 },
+  cargoTagHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+  },
   cargoTagHeaderText: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: "700" as const,
-    letterSpacing: 0.3,
+    letterSpacing: 0.6,
+    textTransform: "uppercase" as const,
   },
-  cargoTagBody: { gap: 16, alignItems: "stretch" },
-  cargoTagBodyRow: { flexDirection: "row" },
-  cargoTagBodyColumn: { flexDirection: "column" },
-  cargoTagInputCol: { gap: 8, justifyContent: "center" },
-  cargoTagInputColRow: { flex: 2, minWidth: 120 },
-  cargoTagInputColColumn: { width: "100%" },
+  cargoTagBody: { width: "100%", gap: 16, alignItems: "center" },
   cargoTagLabel: {
     fontSize: 12,
     fontWeight: "600" as const,
     textTransform: "uppercase" as const,
     letterSpacing: 0.5,
+    marginBottom: 6,
   },
   cargoTagInput: {
     height: 56,
@@ -2392,25 +2376,22 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     fontSize: 15,
     fontWeight: "600" as const,
+    width: "100%",
   },
-  cargoTagDivider: { marginVertical: 4 },
-  cargoTagDividerRow: { width: 1 },
-  cargoTagDividerColumn: { width: "100%", height: 1, marginVertical: 8 },
-  cargoTagBarcodeCol: { justifyContent: "center", alignItems: "center" },
-  cargoTagBarcodeColRow: { flex: 1, minWidth: 160, maxWidth: 200 },
-  cargoTagBarcodeColColumn: { width: "100%" },
+  cargoTagMawbValue: {
+    fontSize: 22,
+    fontWeight: "700" as const,
+    textAlign: "center",
+    letterSpacing: 0.5,
+  },
   cargoTagBarcodePanel: {
     backgroundColor: "#FFFFFF",
-    borderRadius: 10,
-    padding: 16,
-    paddingLeft: 18,
+    borderRadius: 12,
+    padding: 24,
+    paddingHorizontal: 28,
     alignItems: "center",
-    gap: 12,
+    gap: 14,
     width: "100%",
-    minWidth: 150,
-    borderLeftWidth: 2,
-    borderLeftColor: "#E2E8F0",
-    borderStyle: "dashed",
   },
   cargoTagBarcodeWrapper: {
     width: "100%",
@@ -2420,7 +2401,7 @@ const styles = StyleSheet.create({
   },
   cargoTagBarcodeValue: {
     fontFamily: "monospace",
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: "700" as const,
     color: "#0A1F4C",
     letterSpacing: 0.5,
@@ -2429,10 +2410,15 @@ const styles = StyleSheet.create({
   cargoTagPlaceholder: {
     alignItems: "center",
     justifyContent: "center",
-    gap: 8,
-    paddingVertical: 16,
+    gap: 10,
+    paddingVertical: 28,
+    width: "100%",
   },
-  cargoTagPlaceholderText: { fontSize: 12, fontWeight: "600" as const, textAlign: "center" },
+  cargoTagPlaceholderText: {
+    fontSize: 13,
+    fontWeight: "600" as const,
+    textAlign: "center",
+  },
   barcodeModalRoot: { flex: 1, padding: 24 },
   barcodeModalHeader: {
     flexDirection: "row",
