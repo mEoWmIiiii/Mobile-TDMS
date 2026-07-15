@@ -1,0 +1,93 @@
+Replace the temporary scanner placeholder with a real barcode scanner using the camera.
+
+Requirements
+1. Scanner State
+
+Add local state:
+
+const [isScanning, setIsScanning] = useState(false);
+const [scanSuccess, setScanSuccess] = useState(false);
+When the Scan button is tapped:
+Open a full-screen scanner Modal.
+Do not show the placeholder Alert anymore.
+2. Camera Scanner
+Use the barcode scanning library that is already installed in the project (Expo Camera, Vision Camera, or any existing scanner package).
+Do not install new dependencies unless no scanner library exists.
+Request camera permission only if required.
+
+When a barcode is detected:
+
+Read the barcode value.
+Update the MAWB field:
+updateAirStep("step4", "mawb", scannedValue);
+Close the scanner.
+Show a temporary success banner.
+
+Prevent duplicate scans by ignoring additional barcode events after the first successful scan until the scanner closes.
+
+3. Scanner UI
+
+The scanner should open as a full-screen Modal.
+
+Include:
+
+Live camera preview
+Center scanning frame
+Dark overlay outside the frame
+"Align the barcode inside the frame" instruction
+Cancel button to close the scanner
+
+Do not redesign the rest of the screen.
+
+4. Success Banner
+
+After a successful scan:
+
+Display a small success banner below the MAWB field.
+
+Example:
+
+✓ Barcode scanned successfully
+MAWB updated
+
+Requirements:
+
+light green background
+rounded corners
+success/check icon
+auto-hide after 3–4 seconds
+5. Manual Entry
+
+Users must still be able to manually type the MAWB.
+
+Scanning should simply populate the same TextInput automatically.
+
+6. Preserve Existing Logic
+
+Do not modify:
+
+verification workflow
+step navigation
+editable/read-only behavior
+form state
+business logic
+styling outside the MAWB section
+
+Only implement the live barcode scanner integration.
+
+Bonus (Recommended)
+
+After a successful scan, compare the scanned MAWB against any existing value:
+
+If the field is empty → populate it immediately.
+If it already contains the same value → show "MAWB already scanned."
+If it contains a different value → prompt:
+
+A different MAWB already exists. Replace it?
+
+Buttons:
+
+Replace
+Cancel
+
+This extra validation prevents warehouse staff from accidentally scanning the wrong cargo label, which is a common real-world issue in air cargo operations.

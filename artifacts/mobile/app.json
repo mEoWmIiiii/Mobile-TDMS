@@ -14,9 +14,14 @@
       "backgroundColor": "#0A1F4C"
     },
     "ios": {
-      "supportsTablet": false
+      "supportsTablet": false,
+      "infoPlist": {
+        "NSCameraUsageDescription": "This app uses the camera to scan MAWB barcodes for air cargo acceptance."
+      }
     },
-    "android": {},
+    "android": {
+      "permissions": ["CAMERA"]
+    },
     "web": {
       "favicon": "./assets/images/favicon.png"
     },
@@ -28,7 +33,13 @@
         }
       ],
       "expo-font",
-      "expo-web-browser"
+      "expo-web-browser",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow $(PRODUCT_NAME) to use the camera to scan MAWB barcodes."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

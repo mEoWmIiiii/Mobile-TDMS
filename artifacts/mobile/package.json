@@ -57,7 +57,6 @@
   },
   "dependencies": {
     "@react-native-community/datetimepicker": "^9.1.0",
-    "expo-brightness": "^14.0.8",
-    "react-native-barcode-svg": "^0.0.15"
+    "expo-camera": "~17.0.10"
   }
 }

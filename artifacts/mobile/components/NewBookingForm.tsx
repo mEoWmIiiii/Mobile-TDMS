@@ -1,10 +1,11 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   Alert,
   Animated,
   Easing,
   Modal,
   ScrollView,
+  StatusBar,
   StyleSheet,
   Text,
   TextInput,
@@ -12,6 +13,11 @@ import {
   View,
 } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
+import {
+  BarcodeScanningResult,
+  CameraView,
+  useCameraPermissions,
+} from "expo-camera";
 
 import { Icon } from "@/components/Icon";
 import { useColors } from "@/hooks/useColors";
@@ -339,6 +345,8 @@ export function NewBookingForm({
   const [form, setForm] = useState<FormState>(emptyForm());
   const [plateNumber, setPlateNumber] = useState("");
   const [airFieldsHeight] = useState(() => new Animated.Value(0));
+  const [isScanning, setIsScanning] = useState(false);
+  const [scanSuccess, setScanSuccess] = useState<string | null>(null);
 
   useEffect(() => {
     if (!visible) return;
@@ -488,6 +496,40 @@ export function NewBookingForm({
   const handleBarcodeScanned = (value: string) => {
     updateAirStep("step4", "mawb", value);
   };
+
+  const applyScannedMawb = (value: string) => {
+    const current = form.air.step4.mawb.trim();
+    if (!current) {
+      handleBarcodeScanned(value);
+      setScanSuccess("Barcode scanned successfully");
+      return;
+    }
+    if (current === value.trim()) {
+      setScanSuccess("MAWB already scanned");
+      return;
+    }
+    Alert.alert(
+      "Different MAWB exists",
+      "A different MAWB already exists. Replace it?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Replace",
+          onPress: () => {
+            handleBarcodeScanned(value);
+            setScanSuccess("MAWB replaced");
+          },
+        },
+      ],
+      { cancelable: true }
+    );
+  };
+
+  useEffect(() => {
+    if (!scanSuccess) return;
+    const timer = setTimeout(() => setScanSuccess(null), 3500);
+    return () => clearTimeout(timer);
+  }, [scanSuccess]);
 
   const confirmVerify = (onConfirm: () => void) => {
     Alert.alert(
@@ -1427,9 +1469,7 @@ export function NewBookingForm({
                         placeholder="Enter MAWB..."
                       />
                       <TouchableOpacity
-                        onPress={() =>
-                          Alert.alert("Barcode Scanner", "Open camera scanner")
-                        }
+                        onPress={() => setIsScanning(true)}
                         activeOpacity={0.8}
                         style={[
                           styles.scanBtn,
@@ -1440,6 +1480,17 @@ export function NewBookingForm({
                         <Icon name="scan" size={24} color="#FFFFFF" />
                       </TouchableOpacity>
                     </View>
+                    {scanSuccess && (
+                      <View
+                        style={[
+                          styles.scanSuccessBanner,
+                          { backgroundColor: "#DCFCE7" },
+                        ]}
+                      >
+                        <Icon name="check-circle" size={16} color="#16A34A" />
+                        <Text style={styles.scanSuccessText}>{scanSuccess}</Text>
+                      </View>
+                    )}
                   </View>
                   <Text
                     style={[
@@ -1630,6 +1681,11 @@ export function NewBookingForm({
         </TouchableOpacity>
       </View>
 
+      <BarcodeScannerModal
+        isVisible={isScanning}
+        onClose={() => setIsScanning(false)}
+        onScan={applyScannedMawb}
+      />
     </View>
   );
 }
@@ -1955,6 +2011,110 @@ const inputStyle = (
   opacity: dimmed ? 0.6 : 1,
 });
 
+function BarcodeScannerModal({
+  isVisible,
+  onClose,
+  onScan,
+}: {
+  isVisible: boolean;
+  onClose: () => void;
+  onScan: (value: string) => void;
+}) {
+  const colors = useColors();
+  const [permission, requestPermission] = useCameraPermissions();
+  const scannedRef = useRef(false);
+
+  useEffect(() => {
+    if (!isVisible) return;
+    scannedRef.current = false;
+    if (!permission?.granted) {
+      requestPermission();
+    }
+  }, [isVisible, permission, requestPermission]);
+
+  const handleBarCodeScanned = (result: BarcodeScanningResult) => {
+    if (scannedRef.current) return;
+    scannedRef.current = true;
+    onScan(result.data);
+    onClose();
+  };
+
+  return (
+    <Modal visible={isVisible} animationType="slide" transparent={false}>
+      <StatusBar barStyle="light-content" />
+      <View style={styles.scannerRoot}>
+        {permission?.granted ? (
+          <>
+            <CameraView
+              style={styles.scannerCamera}
+              facing="back"
+              barcodeScannerSettings={{
+                barcodeTypes: [
+                  "qr",
+                  "code128",
+                  "code39",
+                  "pdf417",
+                  "ean13",
+                  "upc_a",
+                ],
+              }}
+              onBarcodeScanned={handleBarCodeScanned}
+            />
+            <View style={styles.scannerOverlay}>
+              <View style={styles.scannerOverlayTop} />
+              <View style={styles.scannerOverlayMiddle}>
+                <View style={styles.scannerOverlaySide} />
+                <View style={styles.scannerFrame}>
+                  <View style={[styles.scannerCorner, styles.scannerCornerTL]} />
+                  <View style={[styles.scannerCorner, styles.scannerCornerTR]} />
+                  <View style={[styles.scannerCorner, styles.scannerCornerBL]} />
+                  <View style={[styles.scannerCorner, styles.scannerCornerBR]} />
+                </View>
+                <View style={styles.scannerOverlaySide} />
+              </View>
+              <View style={styles.scannerOverlayBottom} />
+            </View>
+            <View style={styles.scannerHeader}>
+              <Text style={styles.scannerHeaderText}>
+                Align the barcode inside the frame
+              </Text>
+            </View>
+          </>
+        ) : (
+          <View style={styles.scannerPermission}>
+            <Icon name="camera" size={48} color={colors.primary} />
+            <Text style={[styles.scannerPermissionTitle, { color: colors.foreground }]}>
+              Camera permission required
+            </Text>
+            <Text style={[styles.scannerPermissionSub, { color: colors.mutedForeground }]}>
+              Allow camera access to scan MAWB barcodes.
+            </Text>
+            <TouchableOpacity
+              style={[
+                styles.scannerPermissionBtn,
+                { backgroundColor: colors.primary },
+              ]}
+              onPress={requestPermission}
+            >
+              <Text style={styles.scannerPermissionBtnText}>Grant Permission</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+        <TouchableOpacity
+          style={[
+            styles.scannerCancelBtn,
+            { backgroundColor: "rgba(0,0,0,0.4)" },
+          ]}
+          onPress={onClose}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.scannerCancelText}>Cancel</Text>
+        </TouchableOpacity>
+      </View>
+    </Modal>
+  );
+}
+
 const styles = StyleSheet.create({
   modalRoot: { flex: 1 },
   modalHeader: {
@@ -2238,5 +2398,146 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     alignItems: "center",
     justifyContent: "center",
+  },
+  scanSuccessBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginTop: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: 10,
+  },
+  scanSuccessText: {
+    fontSize: 13,
+    fontWeight: "600" as const,
+    color: "#16A34A",
+  },
+  scannerRoot: {
+    flex: 1,
+    backgroundColor: "#000",
+  },
+  scannerCamera: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  scannerOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    flexDirection: "column",
+  },
+  scannerOverlayTop: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.55)",
+  },
+  scannerOverlayBottom: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.55)",
+  },
+  scannerOverlayMiddle: {
+    flexDirection: "row",
+    height: 260,
+  },
+  scannerOverlaySide: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.55)",
+  },
+  scannerFrame: {
+    width: 260,
+    height: 260,
+    backgroundColor: "transparent",
+    position: "relative",
+  },
+  scannerCorner: {
+    position: "absolute",
+    width: 28,
+    height: 28,
+    borderColor: "#fff",
+    borderWidth: 4,
+  },
+  scannerCornerTL: {
+    top: 0,
+    left: 0,
+    borderRightWidth: 0,
+    borderBottomWidth: 0,
+    borderTopLeftRadius: 12,
+  },
+  scannerCornerTR: {
+    top: 0,
+    right: 0,
+    borderLeftWidth: 0,
+    borderBottomWidth: 0,
+    borderTopRightRadius: 12,
+  },
+  scannerCornerBL: {
+    bottom: 0,
+    left: 0,
+    borderRightWidth: 0,
+    borderTopWidth: 0,
+    borderBottomLeftRadius: 12,
+  },
+  scannerCornerBR: {
+    bottom: 0,
+    right: 0,
+    borderLeftWidth: 0,
+    borderTopWidth: 0,
+    borderBottomRightRadius: 12,
+  },
+  scannerHeader: {
+    position: "absolute",
+    top: 80,
+    left: 0,
+    right: 0,
+    alignItems: "center",
+    paddingHorizontal: 20,
+  },
+  scannerHeaderText: {
+    color: "#fff",
+    fontSize: 15,
+    fontWeight: "600" as const,
+    textAlign: "center",
+    textShadowColor: "rgba(0,0,0,0.6)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
+  },
+  scannerPermission: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 30,
+    gap: 12,
+  },
+  scannerPermissionTitle: {
+    fontSize: 18,
+    fontWeight: "700" as const,
+    textAlign: "center",
+    marginTop: 8,
+  },
+  scannerPermissionSub: {
+    fontSize: 14,
+    textAlign: "center",
+    lineHeight: 20,
+  },
+  scannerPermissionBtn: {
+    marginTop: 12,
+    paddingHorizontal: 24,
+    paddingVertical: 14,
+    borderRadius: 12,
+  },
+  scannerPermissionBtnText: {
+    color: "#fff",
+    fontSize: 15,
+    fontWeight: "700" as const,
+  },
+  scannerCancelBtn: {
+    position: "absolute",
+    bottom: 50,
+    alignSelf: "center",
+    paddingHorizontal: 28,
+    paddingVertical: 14,
+    borderRadius: 12,
+  },
+  scannerCancelText: {
+    color: "#fff",
+    fontSize: 15,
+    fontWeight: "700" as const,
   },
 });
