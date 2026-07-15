@@ -44,7 +44,8 @@ type IconName =
   | "chevron-right"
   | "sun"
   | "moon"
-  | "upload-cloud";
+  | "upload-cloud"
+  | "scan";
 
 interface IconProps {
   name: IconName;
@@ -380,6 +381,16 @@ export function Icon({ name, size = 20, color = "#000", strokeWidth = 2 }: IconP
           <Polyline points="16 16 12 12 8 16" />
           <Line x1="12" y1="12" x2="12" y2="21" />
           <Path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3" />
+        </Svg>
+      );
+    case "scan":
+      return (
+        <Svg {...props}>
+          <Path d="M3 7V5a2 2 0 0 1 2-2h2" />
+          <Path d="M17 3h2a2 2 0 0 1 2 2v2" />
+          <Path d="M21 17v2a2 2 0 0 1-2 2h-2" />
+          <Path d="M7 21H5a2 2 0 0 1-2-2v-2" />
+          <Line x1="3" y1="12" x2="21" y2="12" />
         </Svg>
       );
     case "edit":

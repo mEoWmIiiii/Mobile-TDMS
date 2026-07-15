@@ -2,7 +2,6 @@ import React, { useEffect, useMemo, useState } from "react";
 import {
   Alert,
   Animated,
-  Dimensions,
   Easing,
   Modal,
   ScrollView,
@@ -13,8 +12,6 @@ import {
   View,
 } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
-import Barcode from "react-native-barcode-svg";
-import * as Brightness from "expo-brightness";
 
 import { Icon } from "@/components/Icon";
 import { useColors } from "@/hooks/useColors";
@@ -342,8 +339,6 @@ export function NewBookingForm({
   const [form, setForm] = useState<FormState>(emptyForm());
   const [plateNumber, setPlateNumber] = useState("");
   const [airFieldsHeight] = useState(() => new Animated.Value(0));
-  const [barcodeModal, setBarcodeModal] = useState(false);
-  const [originalBrightness, setOriginalBrightness] = useState<number | null>(null);
 
   useEffect(() => {
     if (!visible) return;
@@ -490,27 +485,8 @@ export function NewBookingForm({
 
   const save = () => onSubmit(form);
 
-  const openBarcode = async () => {
-    if (!form.air.step4.mawb) return;
-    setBarcodeModal(true);
-    try {
-      const { status } = await Brightness.requestPermissionsAsync();
-      if (status === "granted") {
-        const current = await Brightness.getBrightnessAsync();
-        setOriginalBrightness(current);
-        await Brightness.setBrightnessAsync(1);
-      }
-    } catch {
-      // ignore brightness errors
-    }
-  };
-
-  const closeBarcode = () => {
-    setBarcodeModal(false);
-    if (originalBrightness !== null) {
-      Brightness.setBrightnessAsync(originalBrightness).catch(() => {});
-      setOriginalBrightness(null);
-    }
+  const handleBarcodeScanned = (value: string) => {
+    updateAirStep("step4", "mawb", value);
   };
 
   const confirmVerify = (onConfirm: () => void) => {
@@ -1439,87 +1415,30 @@ export function NewBookingForm({
                     >
                       MAWB
                     </Text>
-                    <TextInput
-                      style={[
-                        styles.cargoTagInput,
-                        inputStyle(colors, false, !isAirStepEditable(3)),
-                      ]}
-                      value={form.air.step4.mawb}
-                      onChangeText={(v) => updateAirStep("step4", "mawb", v)}
-                      editable={isAirStepEditable(3)}
-                      placeholder="Enter MAWB..."
-                    />
-                  </View>
-                  <View
-                    style={[
-                      styles.cargoTagCard,
-                      {
-                        backgroundColor: colors.card,
-                        borderColor: colors.border,
-                      },
-                    ]}
-                  >
-                    <View style={styles.cargoTagHeader}>
-                      <Icon name="tag" size={16} color={colors.primary} />
-                      <Text
+                    <View style={styles.mawbRow}>
+                      <TextInput
                         style={[
-                          styles.cargoTagHeaderText,
-                          { color: colors.foreground },
+                          styles.mawbInput,
+                          inputStyle(colors, false, !isAirStepEditable(3)),
                         ]}
+                        value={form.air.step4.mawb}
+                        onChangeText={(v) => updateAirStep("step4", "mawb", v)}
+                        editable={isAirStepEditable(3)}
+                        placeholder="Enter MAWB..."
+                      />
+                      <TouchableOpacity
+                        onPress={() =>
+                          Alert.alert("Barcode Scanner", "Open camera scanner")
+                        }
+                        activeOpacity={0.8}
+                        style={[
+                          styles.scanBtn,
+                          { backgroundColor: colors.primary },
+                        ]}
+                        disabled={!isAirStepEditable(3)}
                       >
-                        Master Air Waybill
-                      </Text>
-                    </View>
-                    <View style={styles.cargoTagBody}>
-                      {form.air.step4.mawb ? (
-                        <>
-                          <Text
-                            style={[
-                              styles.cargoTagMawbValue,
-                              { color: colors.foreground },
-                            ]}
-                          >
-                            {form.air.step4.mawb}
-                          </Text>
-                          <TouchableOpacity
-                            onPress={openBarcode}
-                            activeOpacity={0.8}
-                            style={styles.cargoTagBarcodePanel}
-                          >
-                            <View style={styles.cargoTagBarcodeWrapper}>
-                              <Barcode
-                                value={form.air.step4.mawb}
-                                format="CODE128"
-                                height={64}
-                                maxWidth={156}
-                                singleBarWidth={2}
-                                lineColor="#000000"
-                                backgroundColor="#FFFFFF"
-                                onError={() => {}}
-                              />
-                            </View>
-                            <Text style={styles.cargoTagBarcodeValue}>
-                              {form.air.step4.mawb}
-                            </Text>
-                          </TouchableOpacity>
-                        </>
-                      ) : (
-                        <View style={styles.cargoTagPlaceholder}>
-                          <Icon
-                            name="tag"
-                            size={28}
-                            color={colors.mutedForeground}
-                          />
-                          <Text
-                            style={[
-                              styles.cargoTagPlaceholderText,
-                              { color: colors.mutedForeground },
-                            ]}
-                          >
-                            Awaiting MAWB
-                          </Text>
-                        </View>
-                      )}
+                        <Icon name="scan" size={24} color="#FFFFFF" />
+                      </TouchableOpacity>
                     </View>
                   </View>
                   <Text
@@ -1711,56 +1630,6 @@ export function NewBookingForm({
         </TouchableOpacity>
       </View>
 
-      <Modal
-        visible={barcodeModal}
-        transparent={false}
-        animationType="fade"
-        onRequestClose={closeBarcode}
-      >
-        <View
-          style={[
-            styles.barcodeModalRoot,
-            { backgroundColor: colors.background },
-          ]}
-        >
-          <View style={styles.barcodeModalHeader}>
-            <TouchableOpacity
-              onPress={closeBarcode}
-              style={styles.barcodeModalClose}
-            >
-              <Icon name="x" size={28} color={colors.foreground} />
-            </TouchableOpacity>
-          </View>
-          <View style={styles.barcodeModalBody}>
-            <Barcode
-              value={form.air.step4.mawb}
-              format="CODE128"
-              height={140}
-              maxWidth={Dimensions.get("window").width - 48}
-              singleBarWidth={3}
-              lineColor={colors.foreground}
-              backgroundColor={colors.background}
-              onError={() => {}}
-            />
-            <Text
-              style={[
-                styles.barcodeModalLabel,
-                { color: colors.mutedForeground },
-              ]}
-            >
-              MAWB
-            </Text>
-            <Text
-              style={[
-                styles.barcodeModalValue,
-                { color: colors.foreground },
-              ]}
-            >
-              {form.air.step4.mawb}
-            </Text>
-          </View>
-        </View>
-      </Modal>
     </View>
   );
 }
@@ -2342,33 +2211,6 @@ const styles = StyleSheet.create({
   stampBtn: { paddingVertical: 12, borderRadius: 10, alignItems: "center" },
   stampBtnText: { color: "#fff", fontSize: 13, fontWeight: "700" as const },
   cargoTagInputWrapper: { width: "100%", marginBottom: 12 },
-  cargoTagCard: {
-    width: "100%",
-    borderRadius: 16,
-    borderWidth: 1,
-    padding: 20,
-    gap: 16,
-    marginTop: 4,
-    marginBottom: 12,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  cargoTagHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-  },
-  cargoTagHeaderText: {
-    fontSize: 12,
-    fontWeight: "700" as const,
-    letterSpacing: 0.6,
-    textTransform: "uppercase" as const,
-  },
-  cargoTagBody: { width: "100%", gap: 16, alignItems: "center" },
   cargoTagLabel: {
     fontSize: 12,
     fontWeight: "600" as const,
@@ -2376,78 +2218,25 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
     marginBottom: 6,
   },
-  cargoTagInput: {
+  mawbRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  mawbInput: {
+    flex: 1,
     height: 56,
     paddingHorizontal: 12,
     borderRadius: 8,
     borderWidth: 1,
     fontSize: 15,
     fontWeight: "600" as const,
-    width: "100%",
   },
-  cargoTagMawbValue: {
-    fontSize: 22,
-    fontWeight: "700" as const,
-    textAlign: "center",
-    letterSpacing: 0.5,
-  },
-  cargoTagBarcodePanel: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 12,
-    padding: 24,
-    paddingHorizontal: 28,
-    alignItems: "center",
-    gap: 14,
-    width: "100%",
-  },
-  cargoTagBarcodeWrapper: {
-    width: "100%",
+  scanBtn: {
+    width: 48,
+    height: 48,
+    borderRadius: 10,
     alignItems: "center",
     justifyContent: "center",
-    overflow: "hidden",
-  },
-  cargoTagBarcodeValue: {
-    fontFamily: "monospace",
-    fontSize: 13,
-    fontWeight: "700" as const,
-    color: "#0A1F4C",
-    letterSpacing: 0.5,
-    textAlign: "center",
-  },
-  cargoTagPlaceholder: {
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 10,
-    paddingVertical: 28,
-    width: "100%",
-  },
-  cargoTagPlaceholderText: {
-    fontSize: 13,
-    fontWeight: "600" as const,
-    textAlign: "center",
-  },
-  barcodeModalRoot: { flex: 1, padding: 24 },
-  barcodeModalHeader: {
-    flexDirection: "row",
-    justifyContent: "flex-end",
-    paddingTop: 20,
-  },
-  barcodeModalClose: { padding: 8 },
-  barcodeModalBody: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 16,
-  },
-  barcodeModalLabel: {
-    fontSize: 12,
-    fontWeight: "600" as const,
-    textTransform: "uppercase" as const,
-    letterSpacing: 0.5,
-  },
-  barcodeModalValue: {
-    fontSize: 20,
-    fontWeight: "700" as const,
-    textAlign: "center",
   },
 });
