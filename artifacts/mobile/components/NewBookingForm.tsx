@@ -1580,9 +1580,12 @@ export function NewBookingForm({
                       placeholderTextColor={colors.mutedForeground}
                     />
                   </StepFormRow>
-                </View>
-                <View style={styles.stepCol}>
-                  <Text style={[styles.sectionTitle, { color: "#64748B" }]}>
+                  <Text
+                    style={[
+                      styles.sectionTitle,
+                      { color: "#64748B", marginTop: 12 },
+                    ]}
+                  >
                     Airline Stamp
                   </Text>
                   <TextInput
