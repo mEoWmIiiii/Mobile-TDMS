@@ -552,7 +552,12 @@ export function NewBookingForm({
       </View>
       <ScrollView
         style={styles.modalScroll}
-        contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 160 }}
+        contentContainerStyle={{
+          width: "100%",
+          alignSelf: "stretch",
+          paddingHorizontal: 16,
+          paddingBottom: 160,
+        }}
         keyboardShouldPersistTaps="handled"
       >
         <FormRow label="CUSTOMER NAME *">
